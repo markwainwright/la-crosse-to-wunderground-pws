@@ -26,7 +26,7 @@
   },
 
   "Resources": {
-    "LambdaRole": {
+    "Role": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "RoleName": {"Fn::Sub": "${StackName}-role"},
@@ -68,10 +68,10 @@
           "S3Bucket": {"Ref": "CodeS3Bucket"},
           "S3Key": {"Ref": "CodeObjectKey"}
         },
-        "Description": "Fetch weather observations from La Crosse Alerts Mobile and submit to Weather Underground PWS",
+        "Description": "Fetch weather observations from La Crosse Alerts Mobile and submit them to Weather Underground PWS",
         "Handler": "lambda.handler",
         "MemorySize": 128,
-        "Role": {"Fn::GetAtt": ["LambdaRole", "Arn"]},
+        "Role": {"Fn::GetAtt": ["Role", "Arn"]},
         "Runtime": "nodejs6.10",
         "Timeout": 5,
         "Environment": {
@@ -87,7 +87,7 @@
     "ScheduleRule": {
       "Type": "AWS::Events::Rule",
       "Properties": {
-        "Description": "Schedule rule for ${StackName}-function",
+        "Description": {"Fn::Sub": "Schedule rule for '${StackName}-function'"},
         "Name": {"Fn::Sub": "${StackName}-schedule"},
         "ScheduleExpression": "rate(10 minutes)",
         "State": "ENABLED",
