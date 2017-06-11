@@ -1,4 +1,4 @@
-const {laCrosseToWundergroundPws} = require('./lib/la-crosse-to-wunderground-pws');
+const { laCrosseToWundergroundPws } = require('./lib/la-crosse-to-wunderground-pws');
 
 laCrosseToWundergroundPws()
   .then(console.log)
