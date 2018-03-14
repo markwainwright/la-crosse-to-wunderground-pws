@@ -5,30 +5,30 @@ const {
 } = require('../lib/la-crosse-to-wunderground-pws');
 
 const mockLaCrosseObservations = {
-  'Device_id': '7FFF64F0F12828B9',
-  'model': 'WS2816',
-  'TimeStamp': '1495268534',
-  'Icon': '1',
-  'StormAlarm': '0',
-  'IndoorTemp': 73.8,
-  'IndoorHumid': '62',
-  'OutdoorTemp': 57.9,
-  'OutdoorHumid': '67',
-  'DewPoint': 47,
-  'WindDir': 'ESE',
-  'WindVelocity': 0,
-  'GustVelocity': 0,
-  'Rain1hr': 0,
-  'Rain24hr': 0.01,
-  'RainWeek': 1.2,
-  'RainMonth': 3.99,
-  'RainTotal': 139.63,
-  'Pressure': 29.44,
-  'Tendency': '2',
-  'success': 9,
-  'FeelsLike': 57.9,
-  'timestamp': null,
-  'utctime': 1495268534
+  Device_id: '7FFF64F0F12828B9',
+  model: 'WS2816',
+  TimeStamp: '1495268534',
+  Icon: '1',
+  StormAlarm: '0',
+  IndoorTemp: 73.8,
+  IndoorHumid: '62',
+  OutdoorTemp: 57.9,
+  OutdoorHumid: '67',
+  DewPoint: 47,
+  WindDir: 'ESE',
+  WindVelocity: 0,
+  GustVelocity: 0,
+  Rain1hr: 0,
+  Rain24hr: 0.01,
+  RainWeek: 1.2,
+  RainMonth: 3.99,
+  RainTotal: 139.63,
+  Pressure: 29.44,
+  Tendency: '2',
+  success: 9,
+  FeelsLike: 57.9,
+  timestamp: null,
+  utctime: Math.round(Date.now() / 1000) - 60,
 };
 
 const mockWundergroundObservations = {
@@ -51,9 +51,11 @@ jest.mock('http', () => {
         setEncoding: () => res,
         on: jest.fn((event, callback) => {
           if (event === 'data') {
-            callback(JSON.stringify({
-              device0: {obs: [mockLaCrosseObservations, {foo: 'bar'}]}
-            }));
+            callback(
+              JSON.stringify({
+                device0: { obs: [mockLaCrosseObservations, { foo: 'bar' }] },
+              })
+            );
           } else {
             callback();
           }
@@ -61,7 +63,7 @@ jest.mock('http', () => {
         }),
       };
       callback(res);
-      return {on: () => {}};
+      return { on: () => {} };
     }),
     request: jest.fn((obj, callback) => {
       const res = {
@@ -76,9 +78,9 @@ jest.mock('http', () => {
         }),
       };
       callback(res);
-      return {on: () => {}};
+      return { on: () => {} };
     }),
-  }
+  };
 });
 
 describe('getLaCrosseObservations', () => {
@@ -90,8 +92,9 @@ describe('getLaCrosseObservations', () => {
 
 describe('convertToWundergroundObservations', () => {
   test('should map values correctly', () => {
-    expect(convertToWundergroundObservations(mockLaCrosseObservations))
-      .toEqual(mockWundergroundObservations);
+    expect(convertToWundergroundObservations(mockLaCrosseObservations)).toEqual(
+      mockWundergroundObservations
+    );
   });
 });
 
