@@ -1,0 +1,103 @@
+Parameters:
+  AlarmEmail:
+    Type: String
+  CodeS3Bucket:
+    Type: String
+  CodeS3Key:
+    Type: String
+  LaCrosseDeviceId:
+    Type: String
+  WundergroundId:
+    Type: String
+  WundergroundPassword:
+    Type: String
+
+Resources:
+  IamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-log-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-function
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      Description: Fetch weather observations from La Crosse Alerts Mobile and submit them to Weather Underground PWS
+      Handler: lambda.handler
+      MemorySize: 128
+      Role: !GetAtt IamRole.Arn
+      Runtime: nodejs6.10
+      Timeout: 5
+      Environment:
+        Variables:
+          LA_CROSSE_DEVICE_ID: !Ref LaCrosseDeviceId
+          WUNDERGROUND_ID: !Ref WundergroundId
+          WUNDERGROUND_PWD: !Ref WundergroundPassword
+
+  ScheduleRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: !Sub Schedule rule for ${LambdaFunction}
+      Name: !Sub ${AWS::StackName}-schedule
+      ScheduleExpression: rate(10 minutes)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt LambdaFunction.Arn
+          Id: !Sub ${AWS::StackName}-trigger
+
+  ScheduleRulePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt ScheduleRule.Arn
+
+  AlarmSnsTopic:
+    Type: AWS::SNS::Topic
+
+  AlarmSnsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref AlarmEmail
+      Protocol: email
+      TopicArn: !Ref AlarmSnsTopic
+
+  LambdaErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Namespace: AWS/Lambda
+      AlarmDescription: !Sub Errors for ${LambdaFunction}
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref LambdaFunction
+      MetricName: Errors
+      ComparisonOperator: GreaterThanThreshold
+      Statistic: Sum
+      Unit: Count
+      Threshold: 3
+      Period: 1500 # 25 mins
+      EvaluationPeriods: 1
+      AlarmActions:
+        - !Ref AlarmSnsTopic
+      OKActions:
+        - !Ref AlarmSnsTopic
