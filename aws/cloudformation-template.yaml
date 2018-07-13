@@ -13,10 +13,10 @@ Parameters:
     Type: String
 
 Resources:
-  IamRole:
+  ReaderIamRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub ${AWS::StackName}-role
+      RoleName: !Sub ${AWS::StackName}-reader-role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -33,71 +33,141 @@ Resources:
                 Action:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
+        - PolicyName: !Sub ${AWS::StackName}-queue-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt SqsQueue.Arn
 
-  LambdaFunction:
+  ReaderLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-function
+      FunctionName: !Sub ${AWS::StackName}-reader
       Code:
         S3Bucket: !Ref CodeS3Bucket
         S3Key: !Ref CodeS3Key
-      Description: Fetch weather observations from La Crosse Alerts Mobile and submit them to Weather Underground PWS
-      Handler: lambda.handler
+      Description: Fetch weather observations from La Crosse Alerts Mobile and send them to an SQS queue
+      Handler: reader.handler
       MemorySize: 128
-      Role: !GetAtt IamRole.Arn
-      Runtime: nodejs6.10
+      Role: !GetAtt ReaderIamRole.Arn
+      Runtime: nodejs8.10
       Timeout: 5
       Environment:
         Variables:
           LA_CROSSE_DEVICE_ID: !Ref LaCrosseDeviceId
+          QUEUE_URL: !Ref SqsQueue
+
+  WriterIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-writer-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub ${AWS::StackName}-log-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: arn:aws:logs:*:*:*
+        - PolicyName: !Sub ${AWS::StackName}-queue-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                 - sqs:DeleteMessage
+                 - sqs:ChangeMessageVisibility
+                 - sqs:ReceiveMessage
+                 - sqs:GetQueueAttributes
+                Resource: !GetAtt SqsQueue.Arn
+
+  WriterLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-writer
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      Description: Receive weather observations from an SQS queue and submit them to Weather Underground PWS
+      Handler: writer.handler
+      MemorySize: 128
+      Role: !GetAtt WriterIamRole.Arn
+      Runtime: nodejs8.10
+      Timeout: 5
+      Environment:
+        Variables:
           WUNDERGROUND_ID: !Ref WundergroundId
           WUNDERGROUND_PWD: !Ref WundergroundPassword
 
-  ScheduleRule:
+  ReaderScheduleRule:
     Type: AWS::Events::Rule
     Properties:
-      Description: !Sub Schedule rule for ${LambdaFunction}
+      Description: !Sub Schedule rule for ${ReaderLambdaFunction}
       Name: !Sub ${AWS::StackName}-schedule
-      ScheduleExpression: rate(10 minutes)
+      ScheduleExpression: rate(5 minutes)
       State: ENABLED
       Targets:
-        - Arn: !GetAtt LambdaFunction.Arn
+        - Arn: !GetAtt ReaderLambdaFunction.Arn
           Id: !Sub ${AWS::StackName}-trigger
 
-  ScheduleRulePermission:
+  ReaderScheduleRulePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt LambdaFunction.Arn
+      FunctionName: !GetAtt ReaderLambdaFunction.Arn
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt ScheduleRule.Arn
+      SourceArn: !GetAtt ReaderScheduleRule.Arn
 
-  AlarmSnsTopic:
-    Type: AWS::SNS::Topic
-
-  AlarmSnsSubscription:
-    Type: AWS::SNS::Subscription
+  SqsQueue:
+    Type: AWS::SQS::Queue
     Properties:
-      Endpoint: !Ref AlarmEmail
-      Protocol: email
-      TopicArn: !Ref AlarmSnsTopic
+      QueueName: !Sub ${AWS::StackName}-queue
 
-  LambdaErrorAlarm:
-    Type: AWS::CloudWatch::Alarm
+  WriterEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
     Properties:
-      Namespace: AWS/Lambda
-      AlarmDescription: !Sub Errors for ${LambdaFunction}
-      Dimensions:
-        - Name: FunctionName
-          Value: !Ref LambdaFunction
-      MetricName: Errors
-      ComparisonOperator: GreaterThanThreshold
-      Statistic: Sum
-      Unit: Count
-      Threshold: 3
-      Period: 1500 # 25 mins
-      EvaluationPeriods: 1
-      AlarmActions:
-        - !Ref AlarmSnsTopic
-      OKActions:
-        - !Ref AlarmSnsTopic
+      BatchSize: 5
+      Enabled: true
+      EventSourceArn: !GetAtt SqsQueue.Arn
+      FunctionName: !Ref WriterLambdaFunction
+
+  # AlarmSnsTopic:
+  #   Type: AWS::SNS::Topic
+  #
+  # AlarmSnsSubscription:
+  #   Type: AWS::SNS::Subscription
+  #   Properties:
+  #     Endpoint: !Ref AlarmEmail
+  #     Protocol: email
+  #     TopicArn: !Ref AlarmSnsTopic
+  #
+  # LambdaErrorAlarm:
+  #   Type: AWS::CloudWatch::Alarm
+  #   Properties:
+  #     Namespace: AWS/Lambda
+  #     AlarmDescription: !Sub Errors for ${LambdaFunction}
+  #     Dimensions:
+  #       - Name: FunctionName
+  #         Value: !Ref LambdaFunction
+  #     MetricName: Errors
+  #     ComparisonOperator: GreaterThanThreshold
+  #     Statistic: Sum
+  #     Unit: Count
+  #     Threshold: 3
+  #     Period: 1500 # 25 mins
+  #     EvaluationPeriods: 1
+  #     AlarmActions:
+  #       - !Ref AlarmSnsTopic
+  #     OKActions:
+  #       - !Ref AlarmSnsTopic

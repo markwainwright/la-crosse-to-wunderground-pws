@@ -14,8 +14,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "windrose": "2.0.2",
-    "wunderground-pws": "1.3.1"
+    "windrose": "2.0.2"
   },
   "devDependencies": {
     "jest": "^23.4.1"

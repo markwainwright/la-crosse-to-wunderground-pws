@@ -6,6 +6,7 @@ THIS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 STACK_NAME="la-crosse-to-wunderground-pws"
 CODE_S3_BUCKET="[your s3 bucket]"
 ALARM_EMAIL="[your email address]"
+REGION="us-west-2"
 
 npm test
 
@@ -13,11 +14,12 @@ pushd "$THIS_DIR"
 rm -rf dist
 mkdir -p dist
 pushd dist
-cp ../lambda.js .
+cp ../reader.js .
+cp ../writer.js .
 cp ../../package.json .
 cp -r ../../lib .
 NODE_ENV=production npm install
-rm -r package.json node_modules/*/{README.md,test*,bower.json,LICENSE}
+rm -fr package{,-lock}.json node_modules/*/{README.md,test*,bower.json,LICENSE}
 hash="$(find . -type f -print0 | xargs -0 shasum | shasum | cut -d " " -f1)"
 zip -X --quiet --recurse-paths code.zip .
 popd
@@ -29,9 +31,13 @@ aws s3 ls "s3://$CODE_S3_BUCKET/$code_filename_s3" || \
   aws s3 cp "$code_filename_local" "s3://$CODE_S3_BUCKET/$code_filename_s3"
 
 ACTION="update"
-aws cloudformation describe-stacks --stack-name "$STACK_NAME" > /dev/null || ACTION="create"
+aws cloudformation describe-stacks \
+  --region "$REGION" \
+  --stack-name "$STACK_NAME" \
+  > /dev/null || ACTION="create"
 
 aws cloudformation "$ACTION-stack" \
+  --region "$REGION" \
   --stack-name "$STACK_NAME" \
   --template-body "file://$THIS_DIR/cloudformation-template.yaml" \
   --capabilities "CAPABILITY_NAMED_IAM" \
@@ -43,6 +49,6 @@ aws cloudformation "$ACTION-stack" \
     "ParameterKey=WundergroundId,ParameterValue=$WUNDERGROUND_ID" \
     "ParameterKey=WundergroundPassword,ParameterValue=$WUNDERGROUND_PWD"
 
-aws cloudformation wait "stack-$ACTION-complete" --stack-name "$STACK_NAME"
+aws cloudformation wait "stack-$ACTION-complete" --region "$REGION" --stack-name "$STACK_NAME"
 
 echo "Done!"
