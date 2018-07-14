@@ -13,7 +13,7 @@ Parameters:
     Type: String
 
 Resources:
-  ReaderIamRole:
+  ReaderRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-reader-role
@@ -40,9 +40,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - sqs:SendMessage
-                Resource: !GetAtt SqsQueue.Arn
+                Resource: !GetAtt Queue.Arn
 
-  ReaderLambdaFunction:
+  ReaderFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub ${AWS::StackName}-reader
@@ -52,15 +52,15 @@ Resources:
       Description: Fetch weather observations from La Crosse Alerts Mobile and send them to an SQS queue
       Handler: reader.handler
       MemorySize: 128
-      Role: !GetAtt ReaderIamRole.Arn
+      Role: !GetAtt ReaderRole.Arn
       Runtime: nodejs8.10
       Timeout: 5
       Environment:
         Variables:
           LA_CROSSE_DEVICE_ID: !Ref LaCrosseDeviceId
-          QUEUE_URL: !Ref SqsQueue
+          QUEUE_URL: !Ref Queue
 
-  WriterIamRole:
+  WriterRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub ${AWS::StackName}-writer-role
@@ -90,9 +90,9 @@ Resources:
                  - sqs:ChangeMessageVisibility
                  - sqs:ReceiveMessage
                  - sqs:GetQueueAttributes
-                Resource: !GetAtt SqsQueue.Arn
+                Resource: !GetAtt Queue.Arn
 
-  WriterLambdaFunction:
+  WriterFunction:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub ${AWS::StackName}-writer
@@ -102,7 +102,7 @@ Resources:
       Description: Receive weather observations from an SQS queue and submit them to Weather Underground PWS
       Handler: writer.handler
       MemorySize: 128
-      Role: !GetAtt WriterIamRole.Arn
+      Role: !GetAtt WriterRole.Arn
       Runtime: nodejs8.10
       Timeout: 5
       Environment:
@@ -110,64 +110,85 @@ Resources:
           WUNDERGROUND_ID: !Ref WundergroundId
           WUNDERGROUND_PWD: !Ref WundergroundPassword
 
-  ReaderScheduleRule:
+  ReaderSchedule:
     Type: AWS::Events::Rule
     Properties:
-      Description: !Sub Schedule rule for ${ReaderLambdaFunction}
+      Description: !Sub Schedule rule for ${ReaderFunction}
       Name: !Sub ${AWS::StackName}-schedule
-      ScheduleExpression: rate(10 minutes)
+      ScheduleExpression: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
       State: ENABLED
       Targets:
-        - Arn: !GetAtt ReaderLambdaFunction.Arn
+        - Arn: !GetAtt ReaderFunction.Arn
           Id: !Sub ${AWS::StackName}-trigger
 
-  ReaderScheduleRulePermission:
+  ReaderSchedulePermission:
     Type: AWS::Lambda::Permission
     Properties:
-      FunctionName: !GetAtt ReaderLambdaFunction.Arn
+      FunctionName: !GetAtt ReaderFunction.Arn
       Action: lambda:InvokeFunction
       Principal: events.amazonaws.com
-      SourceArn: !GetAtt ReaderScheduleRule.Arn
+      SourceArn: !GetAtt ReaderSchedule.Arn
 
-  SqsQueue:
+  Queue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-queue
+      VisibilityTimeout: 300 # How long to wait before retrying writer lambda invocation failures
 
-  WriterEventSourceMapping:
+  WriterQueueSubscription:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      BatchSize: 5
+      BatchSize: 1
       Enabled: true
-      EventSourceArn: !GetAtt SqsQueue.Arn
-      FunctionName: !Ref WriterLambdaFunction
+      EventSourceArn: !GetAtt Queue.Arn
+      FunctionName: !Ref WriterFunction
 
-  # AlarmSnsTopic:
-  #   Type: AWS::SNS::Topic
-  #
-  # AlarmSnsSubscription:
-  #   Type: AWS::SNS::Subscription
-  #   Properties:
-  #     Endpoint: !Ref AlarmEmail
-  #     Protocol: email
-  #     TopicArn: !Ref AlarmSnsTopic
-  #
-  # LambdaErrorAlarm:
-  #   Type: AWS::CloudWatch::Alarm
-  #   Properties:
-  #     Namespace: AWS/Lambda
-  #     AlarmDescription: !Sub Errors for ${LambdaFunction}
-  #     Dimensions:
-  #       - Name: FunctionName
-  #         Value: !Ref LambdaFunction
-  #     MetricName: Errors
-  #     ComparisonOperator: GreaterThanThreshold
-  #     Statistic: Sum
-  #     Unit: Count
-  #     Threshold: 3
-  #     Period: 1500 # 25 mins
-  #     EvaluationPeriods: 1
-  #     AlarmActions:
-  #       - !Ref AlarmSnsTopic
-  #     OKActions:
-  #       - !Ref AlarmSnsTopic
+  AlarmTopic:
+    Type: AWS::SNS::Topic
+
+  AlarmSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref AlarmEmail
+      Protocol: email
+      TopicArn: !Ref AlarmTopic
+
+  ReaderErrorAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Namespace: AWS/Lambda
+      AlarmDescription: !Sub Errors for ${ReaderFunction} has hit threshold
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref ReaderFunction
+      MetricName: Errors
+      ComparisonOperator: GreaterThanThreshold
+      Statistic: Sum
+      Unit: Count
+      Threshold: 3
+      Period: 1200 # 20 mins
+      EvaluationPeriods: 2
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
+
+  QueueMessagesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      Namespace: AWS/SQS
+      AlarmDescription: !Sub Visible messages in ${Queue} has hit threshold
+      Dimensions:
+        - Name: QueueName
+          Value: !GetAtt [Queue, QueueName]
+      MetricName: ApproximateNumberOfMessagesVisible
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Statistic: Sum
+      Unit: Count
+      Threshold: 5
+      Period: 300
+      EvaluationPeriods: 1
+      AlarmActions:
+        - !Ref AlarmTopic
+      OKActions:
+        - !Ref AlarmTopic
