@@ -8,34 +8,38 @@ CODE_S3_BUCKET="[your s3 bucket]"
 ALARM_EMAIL="[your email address]"
 REGION="us-west-2"
 
+# Run tests
 npm test
 
-pushd "$THIS_DIR"
-rm -rf dist
-mkdir -p dist
-pushd dist
-cp ../reader.js .
-cp ../writer.js .
-cp ../../package.json .
-cp -r ../../lib .
-NODE_ENV=production npm install
+# Clean dist
+rm -rf "$THIS_DIR/../dist"
+
+# Build a lambda deployment ZIP package
+pushd "$THIS_DIR/../"
+npm run build
+pushd "$THIS_DIR/../dist"
+cp "$THIS_DIR/../package.json" .
+cp "$THIS_DIR/../package-lock.json" .
+npm ci --production || npm install --production
 rm -fr package{,-lock}.json node_modules/*/{README.md,test*,bower.json,LICENSE}
 hash="$(find . -type f -print0 | xargs -0 shasum | shasum | cut -d " " -f1)"
 zip -X --quiet --recurse-paths code.zip .
 popd
 
-code_filename_local="$THIS_DIR/dist/code.zip"
+# Upload it to S3
+code_filename_local="$THIS_DIR/../dist/code.zip"
 code_filename_s3="$STACK_NAME-$hash.zip"
-
 aws s3 ls "s3://$CODE_S3_BUCKET/$code_filename_s3" || \
   aws s3 cp "$code_filename_local" "s3://$CODE_S3_BUCKET/$code_filename_s3"
 
+# Determine whether to create or update statck
 ACTION="update"
 aws cloudformation describe-stacks \
   --region "$REGION" \
   --stack-name "$STACK_NAME" \
   > /dev/null || ACTION="create"
 
+# Create or update statck
 aws cloudformation "$ACTION-stack" \
   --region "$REGION" \
   --stack-name "$STACK_NAME" \
@@ -48,7 +52,3 @@ aws cloudformation "$ACTION-stack" \
     "ParameterKey=LaCrosseDeviceId,ParameterValue=$LA_CROSSE_DEVICE_ID" \
     "ParameterKey=WundergroundId,ParameterValue=$WUNDERGROUND_ID" \
     "ParameterKey=WundergroundPassword,ParameterValue=$WUNDERGROUND_PWD"
-
-aws cloudformation wait "stack-$ACTION-complete" --region "$REGION" --stack-name "$STACK_NAME"
-
-echo "Done!"
