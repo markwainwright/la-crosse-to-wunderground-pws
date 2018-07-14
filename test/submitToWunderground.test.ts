@@ -1,6 +1,4 @@
-const getLaCrosseObservations = require('../lib/getLaCrosseObservations');
-const convertLaCrosseToWundergroundObservations = require('../lib/convertLaCrosseToWundergroundObservations');
-const submitToWunderground = require('../lib/submitToWunderground');
+import submitToWunderground from '../src/lib/submitToWunderground';
 
 const mockWundergroundObservations = {
   tempf: 57.9,
@@ -17,7 +15,7 @@ const mockWundergroundObservations = {
 
 jest.mock('http', () => {
   return {
-    get: jest.fn((settings, callback) => {
+    get: jest.fn((_settings, callback) => {
       const res = {
         statusCode: 200,
         setEncoding: () => res,

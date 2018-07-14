@@ -1,5 +1,4 @@
-const getLaCrosseObservations = require('../lib/getLaCrosseObservations');
-const convertLaCrosseToWundergroundObservations = require('../lib/convertLaCrosseToWundergroundObservations');
+import getLaCrosseObservations from '../src/lib/getLaCrosseObservations';
 
 const mockLaCrosseObservations = {
   Device_id: '7FFF64F0F12828B9',
@@ -43,7 +42,7 @@ const expectedWundergroundObservations = {
 
 jest.mock('http', () => {
   return {
-    get: jest.fn((url, callback) => {
+    get: jest.fn((_url, callback) => {
       const res = {
         statusCode: 200,
         setEncoding: () => res,

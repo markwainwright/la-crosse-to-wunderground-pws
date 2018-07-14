@@ -115,7 +115,7 @@ Resources:
     Properties:
       Description: !Sub Schedule rule for ${ReaderLambdaFunction}
       Name: !Sub ${AWS::StackName}-schedule
-      ScheduleExpression: rate(5 minutes)
+      ScheduleExpression: rate(10 minutes)
       State: ENABLED
       Targets:
         - Arn: !GetAtt ReaderLambdaFunction.Arn
