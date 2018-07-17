@@ -1,15 +1,21 @@
 import submitToWunderground from './lib/submitToWunderground';
 
-interface SQSEvent {
+interface Event {
   Records: {
     messageId: string;
     body: string;
   }[];
 }
 
+interface SNSNotification {
+  Type: 'Notification';
+  MessageId: string;
+  Message: string;
+}
+
 const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
 
-export async function handler(event: SQSEvent) {
+export async function handler(event: Event) {
   if (!WUNDERGROUND_ID) {
     throw new Error('No WUNDERGROUND_ID defined');
   }
@@ -19,9 +25,13 @@ export async function handler(event: SQSEvent) {
   }
 
   const results = await Promise.all(
-    event.Records.map(({ body, messageId }) =>
-      submitToWunderground(WUNDERGROUND_ID, WUNDERGROUND_PWD, JSON.parse(body)).then(result => ({
-        messageId,
+    event.Records.map(record => JSON.parse(record.body)).map((notification: SNSNotification) =>
+      submitToWunderground(
+        WUNDERGROUND_ID,
+        WUNDERGROUND_PWD,
+        JSON.parse(notification.Message)
+      ).then(result => ({
+        messageId: notification.MessageId,
         ...result,
       }))
     )

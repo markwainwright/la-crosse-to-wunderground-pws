@@ -2,25 +2,25 @@ import * as AWS from 'aws-sdk';
 
 import getLaCrosseObservations from './lib/getLaCrosseObservations';
 
-const { LA_CROSSE_DEVICE_ID, QUEUE_URL } = process.env;
+const { LA_CROSSE_DEVICE_ID, TOPIC_ARN } = process.env;
 
-const sqs = new AWS.SQS();
+const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
 
 export async function handler() {
   if (!LA_CROSSE_DEVICE_ID) {
     throw new Error('No LA_CROSSE_DEVICE_ID defined');
   }
 
-  if (!QUEUE_URL) {
-    throw new Error('No QUEUE_URL defined');
+  if (!TOPIC_ARN) {
+    throw new Error('No TOPIC_ARN defined');
   }
 
   const observations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID);
 
-  const result = await sqs
-    .sendMessage({
-      MessageBody: JSON.stringify(observations),
-      QueueUrl: QUEUE_URL,
+  const result = await sns
+    .publish({
+      TopicArn: TOPIC_ARN,
+      Message: JSON.stringify(observations),
     })
     .promise();
 

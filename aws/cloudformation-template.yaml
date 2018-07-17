@@ -25,7 +25,7 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: !Sub ${AWS::StackName}-log-policy
+        - PolicyName: !Sub ${AWS::StackName}-cloudwatch-logs-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -33,14 +33,14 @@ Resources:
                 Action:
                   - logs:*
                 Resource: arn:aws:logs:*:*:*
-        - PolicyName: !Sub ${AWS::StackName}-queue-policy
+        - PolicyName: !Sub ${AWS::StackName}-sns-publish-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:SendMessage
-                Resource: !GetAtt Queue.Arn
+                  - sns:Publish
+                Resource: !Ref Topic
 
   ReaderFunction:
     Type: AWS::Lambda::Function
@@ -58,7 +58,7 @@ Resources:
       Environment:
         Variables:
           LA_CROSSE_DEVICE_ID: !Ref LaCrosseDeviceId
-          QUEUE_URL: !Ref Queue
+          TOPIC_ARN: !Ref Topic
 
   WriterRole:
     Type: AWS::IAM::Role
@@ -129,11 +129,36 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt ReaderSchedule.Arn
 
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}-topic
+      Subscription:
+        - Endpoint: !GetAtt Queue.Arn
+          Protocol: sqs
+
   Queue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub ${AWS::StackName}-queue
       VisibilityTimeout: 300 # How long to wait before retrying writer lambda invocation failures
+
+  QueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref Queue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sqs:SendMessage
+            Resource: !GetAtt Queue.Arn
+            Principal:
+              AWS: "*"
+            Condition:
+              ArnEquals:
+                aws:SourceArn: !Ref Topic
 
   WriterQueueSubscription:
     Type: AWS::Lambda::EventSourceMapping
@@ -145,13 +170,11 @@ Resources:
 
   AlarmTopic:
     Type: AWS::SNS::Topic
-
-  AlarmSubscription:
-    Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: !Ref AlarmEmail
-      Protocol: email
-      TopicArn: !Ref AlarmTopic
+      TopicName: !Sub ${AWS::StackName}-alarm-topic
+      Subscription:
+        - Endpoint: !Ref AlarmEmail
+          Protocol: email
 
   ReaderErrorAlarm:
     Type: AWS::CloudWatch::Alarm
