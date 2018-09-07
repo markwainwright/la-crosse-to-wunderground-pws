@@ -3,7 +3,7 @@ import submitToWunderground from './lib/submitToWunderground';
 interface Event {
   Records: {
     messageId: string;
-    body: string;
+    body: string; // SNSNotification as JSON string
   }[];
 }
 

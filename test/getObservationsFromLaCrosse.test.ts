@@ -1,4 +1,4 @@
-import getLaCrosseObservations from '../src/lib/getLaCrosseObservations';
+import getObservationsFromLaCrosse from '../src/lib/getObservationsFromLaCrosse';
 
 const mockLaCrosseObservations = {
   Device_id: '7FFF64F0F12828B9',
@@ -68,7 +68,9 @@ jest.mock('http', () => {
 describe('getLaCrosseObservations', () => {
   test('should correctly map response to Wunderground observation shape', () => {
     expect.assertions(1);
-    expect(getLaCrosseObservations('aDeviceId')).resolves.toEqual(expectedWundergroundObservations);
+    expect(getObservationsFromLaCrosse('aDeviceId')).resolves.toEqual(
+      expectedWundergroundObservations
+    );
 
     // TODO: Assert that http.get was called with the correct host and path (i.e. with given device ID)
   });
