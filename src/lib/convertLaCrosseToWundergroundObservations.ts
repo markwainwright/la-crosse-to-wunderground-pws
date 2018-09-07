@@ -1,10 +1,10 @@
 import { getDegrees } from 'windrose';
 
-import { LaCrosseObservations, Observations } from './types';
+import { LaCrosseObservations, WundergroundObservations } from './types';
 
 export default function convertLaCrosseToWundergroundObservations(
   laCrosseObservations: LaCrosseObservations
-): Observations {
+): WundergroundObservations {
   const windDirectionDegrees = laCrosseObservations.WindDir
     ? getDegrees(laCrosseObservations.WindDir)
     : undefined;

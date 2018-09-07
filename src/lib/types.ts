@@ -25,7 +25,7 @@ export interface LaCrosseObservations {
   utctime: number;
 }
 
-export interface Observations {
+export interface WundergroundObservations {
   tempf: number;
   humidity: number;
   winddir?: number;

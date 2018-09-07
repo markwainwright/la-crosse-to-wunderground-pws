@@ -1,7 +1,7 @@
 import get from './get';
-import { Observations } from './types';
+import { WundergroundObservations } from './types';
 
-interface WundergroundParams extends Observations {
+interface WundergroundParams extends WundergroundObservations {
   dateutc: string;
   action: 'updateraw';
   ID: string;
@@ -11,7 +11,7 @@ interface WundergroundParams extends Observations {
 export default async function submitToWunderground(
   stationId: string,
   password: string,
-  observations: Observations
+  observations: WundergroundObservations
 ) {
   // See http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
   const params: WundergroundParams = {

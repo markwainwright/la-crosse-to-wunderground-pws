@@ -39,7 +39,7 @@ aws cloudformation describe-stacks \
   --stack-name "$STACK_NAME" \
   > /dev/null || ACTION="create"
 
-# Create or update statck
+# Create or update stack
 aws cloudformation "$ACTION-stack" \
   --region "$REGION" \
   --stack-name "$STACK_NAME" \

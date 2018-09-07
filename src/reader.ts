@@ -1,6 +1,6 @@
 import * as AWS from 'aws-sdk';
 
-import getLaCrosseObservations from './lib/getLaCrosseObservations';
+import getObservationsFromLaCrosse from './lib/getObservationsFromLaCrosse';
 
 const { LA_CROSSE_DEVICE_ID, TOPIC_ARN } = process.env;
 
@@ -15,7 +15,7 @@ export async function handler() {
     throw new Error('No TOPIC_ARN defined');
   }
 
-  const observations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID);
+  const observations = await getObservationsFromLaCrosse(LA_CROSSE_DEVICE_ID);
 
   const result = await sns
     .publish({
