@@ -30,16 +30,22 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                Action: logs:DescribeLogStreams
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
                 Action:
-                  - logs:*
-                Resource: arn:aws:logs:*:*:*
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-reader
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-reader:log-stream:*
         - PolicyName: !Sub ${AWS::StackName}-sns-publish-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
-                Action:
-                  - sns:Publish
+                Action: sns:Publish
                 Resource: !Ref Topic
 
   ReaderFunction:
@@ -49,7 +55,7 @@ Resources:
       Code:
         S3Bucket: !Ref CodeS3Bucket
         S3Key: !Ref CodeS3Key
-      Description: Fetch weather observations from La Crosse Alerts Mobile and send them to an SNS topic
+      Description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
       Handler: reader.handler
       MemorySize: 128
       Role: !GetAtt ReaderRole.Arn
@@ -77,9 +83,16 @@ Resources:
             Version: '2012-10-17'
             Statement:
               - Effect: Allow
+                Action: logs:DescribeLogStreams
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+              - Effect: Allow
                 Action:
-                  - logs:*
-                Resource: arn:aws:logs:*:*:*
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-writer
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}-writer:log-stream:*
         - PolicyName: !Sub ${AWS::StackName}-queue-policy
           PolicyDocument:
             Version: '2012-10-17'
@@ -99,7 +112,7 @@ Resources:
       Code:
         S3Bucket: !Ref CodeS3Bucket
         S3Key: !Ref CodeS3Key
-      Description: Receive weather observations from an SQS queue and submit them to Weather Underground PWS
+      Description: Receives weather observations from an SQS queue and submits them to Weather Underground PWS
       Handler: writer.handler
       MemorySize: 128
       Role: !GetAtt WriterRole.Arn
