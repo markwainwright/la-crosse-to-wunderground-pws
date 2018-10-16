@@ -1,5 +1,5 @@
 import get from './get';
-import { WundergroundObservations } from './types';
+import { WundergroundObservations } from '../types';
 
 interface WundergroundParams extends WundergroundObservations {
   dateutc: string;

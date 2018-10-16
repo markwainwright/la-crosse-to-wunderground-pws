@@ -24,5 +24,7 @@ export async function handler() {
     })
     .promise();
 
-  console.log({ messageId: result.MessageId, observations, deviceId: LA_CROSSE_DEVICE_ID });
+  console.log(
+    JSON.stringify({ messageId: result.MessageId, observations, deviceId: LA_CROSSE_DEVICE_ID })
+  );
 }

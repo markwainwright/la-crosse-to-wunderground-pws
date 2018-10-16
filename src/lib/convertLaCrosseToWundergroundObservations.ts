@@ -1,6 +1,6 @@
 import { getDegrees } from 'windrose';
 
-import { LaCrosseObservations, WundergroundObservations } from './types';
+import { LaCrosseObservations, WundergroundObservations } from '../types';
 
 export default function convertLaCrosseToWundergroundObservations(
   laCrosseObservations: LaCrosseObservations
