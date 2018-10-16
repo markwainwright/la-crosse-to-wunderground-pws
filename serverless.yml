@@ -1,0 +1,128 @@
+service: la-crosse-to-wunderground
+
+plugins:
+  - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  region: us-west-2
+  stage: production
+  timeout: 5
+  memorySize: 128
+  versionFunctions: false
+  iamRoleStatements:
+    # TODO: We should really have one role for each function. I tried using the
+    # serverless-iam-roles-per-function plugin but that does not apply the built-in SQS policy to
+    # the writer role. We could use that plugin and write our own SQS policy in iamRoleStatements
+    # I suppose.
+    - Effect: Allow
+      Action: sns:Publish
+      Resource:
+        Ref: Topic
+
+functions:
+  reader:
+    handler: src/reader.handler
+    environment:
+      LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
+      TOPIC_ARN:
+        Ref: Topic
+    description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
+    events:
+      - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
+
+  writer:
+    handler: src/writer.handler
+    environment:
+      WUNDERGROUND_ID: ${env:WUNDERGROUND_ID}
+      WUNDERGROUND_PWD: ${env:WUNDERGROUND_PWD}
+    description: Receives weather observations from an SQS queue and submits them to Weather Underground PWS
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt: [Queue, Arn]
+          batchSize: 1
+
+resources:
+  Resources:
+    Topic:
+      Type: AWS::SNS::Topic
+      Properties:
+        Subscription:
+          - Endpoint:
+              Fn::GetAtt: [Queue, Arn]
+            Protocol: sqs
+
+    Queue:
+      Type: AWS::SQS::Queue
+      Properties:
+        VisibilityTimeout: 300 # How long to wait before retrying writer lambda invocation failures
+
+    QueuePolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - Ref: Queue
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action: sqs:SendMessage
+              Resource:
+                Fn::GetAtt: [Queue, Arn]
+              Principal:
+                AWS: "*"
+              Condition:
+                ArnEquals:
+                  aws:SourceArn:
+                    Ref: Topic
+
+    AlarmTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        Subscription:
+          - Endpoint: ${env:ALARM_EMAIL}
+            Protocol: email
+
+    ReaderErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        Namespace: AWS/Lambda
+        AlarmDescription: Reader errors has hit threshold
+        Dimensions:
+          - Name: FunctionName
+            Value:
+              Ref: ReaderLambdaFunction
+        MetricName: Errors
+        ComparisonOperator: GreaterThanThreshold
+        Statistic: Sum
+        Unit: Count
+        Threshold: 3
+        Period: 1200 # 20 mins
+        EvaluationPeriods: 2
+        AlarmActions:
+          - Ref: AlarmTopic
+        OKActions:
+          - Ref: AlarmTopic
+
+    QueueMessagesAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        Namespace: AWS/SQS
+        AlarmDescription: Visible messages has hit threshold
+        Dimensions:
+          - Name: QueueName
+            Value:
+              Fn::GetAtt: [Queue, QueueName]
+        MetricName: ApproximateNumberOfMessagesVisible
+        ComparisonOperator: GreaterThanOrEqualToThreshold
+        Statistic: Sum
+        Unit: Count
+        Threshold: 5
+        Period: 300
+        EvaluationPeriods: 1
+        AlarmActions:
+          - Ref: AlarmTopic
+        OKActions:
+          - Ref: AlarmTopic

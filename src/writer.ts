@@ -37,5 +37,5 @@ export async function handler(event: Event) {
     )
   );
 
-  results.forEach(result => console.log(result));
+  results.forEach(result => console.log(JSON.stringify(result)));
 }

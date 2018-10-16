@@ -1,3 +1,4 @@
-node_modules/
-aws/dist
+node_modules
+.serverless
+.build
 dist

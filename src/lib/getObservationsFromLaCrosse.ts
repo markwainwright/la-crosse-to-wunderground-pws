@@ -1,6 +1,6 @@
 import get from './get';
 import convertLaCrosseToWundergroundObservations from './convertLaCrosseToWundergroundObservations';
-import { WundergroundObservations, LaCrosseObservations } from './types';
+import { WundergroundObservations, LaCrosseObservations } from '../types';
 
 interface LaCrosseResponse {
   device0: {
