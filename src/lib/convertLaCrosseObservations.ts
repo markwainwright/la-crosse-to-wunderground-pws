@@ -3,7 +3,7 @@ import { Observations, LaCrosseObservations } from '../types';
 import {
   compassToDegrees,
   fahrenheitToCelsius,
-  inchesToCentimeters,
+  inchesToMillimeters,
   inHgToHPa,
   milesToKilometers,
 } from './conversions';
@@ -21,9 +21,9 @@ export default function convertLaCrosseObservations(
       dewPoint: fahrenheitToCelsius(laCrosseObservations.DewPoint),
       humidity: parseInt(laCrosseObservations.OutdoorHumid, 10) / 100,
       pressure: inHgToHPa(laCrosseObservations.Pressure),
-      rainDay: inchesToCentimeters(laCrosseObservations.Rain24hr),
-      rainHour: inchesToCentimeters(laCrosseObservations.Rain1hr),
-      rainWeek: inchesToCentimeters(laCrosseObservations.RainWeek),
+      rainDay: inchesToMillimeters(laCrosseObservations.Rain24hr),
+      rainHour: inchesToMillimeters(laCrosseObservations.Rain1hr),
+      rainWeek: inchesToMillimeters(laCrosseObservations.RainWeek),
       windDirection: compassToDegrees(laCrosseObservations.WindDir),
       windGust: milesToKilometers(laCrosseObservations.GustVelocity),
       windSpeed: milesToKilometers(laCrosseObservations.WindVelocity),

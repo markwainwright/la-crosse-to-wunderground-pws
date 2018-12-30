@@ -1,7 +1,7 @@
 import {
   celsiusToFahrenheit,
   kilometersToMiles,
-  centimetersToInches,
+  millimetersToInches,
   hPaToInHg,
 } from './conversions';
 import { Observations, WundergroundObservations } from '../types';
@@ -15,8 +15,8 @@ export default function convertLaCrosseToWundergroundObservations(
     winddir: observations.outdoor.windDirection,
     windspeedmph: kilometersToMiles(observations.outdoor.windSpeed),
     windgustmph: kilometersToMiles(observations.outdoor.windGust),
-    rainin: centimetersToInches(observations.outdoor.rainHour),
-    dailyrainin: centimetersToInches(observations.outdoor.rainDay),
+    rainin: millimetersToInches(observations.outdoor.rainHour),
+    dailyrainin: millimetersToInches(observations.outdoor.rainDay),
     baromin: hPaToInHg(observations.outdoor.pressure),
     dewptf: celsiusToFahrenheit(observations.outdoor.dewPoint),
     dateutc: observations.timestamp.substring(0, 19).replace('T', ' '),
