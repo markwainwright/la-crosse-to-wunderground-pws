@@ -1,4 +1,5 @@
-import getObservationsFromLaCrosse from './lib/getObservationsFromLaCrosse';
+import convertLaCrosseObservations from './lib/convertLaCrosseObservations';
+import getLaCrosseObservations from './lib/getLaCrosseObservations';
 import submitToWunderground from './lib/submitToWunderground';
 
 const { LA_CROSSE_DEVICE_ID, WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
@@ -17,10 +18,15 @@ const { LA_CROSSE_DEVICE_ID, WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
       throw new Error('No WUNDERGROUND_PWD defined');
     }
 
-    const observations = await getObservationsFromLaCrosse(LA_CROSSE_DEVICE_ID);
-    const result = await submitToWunderground(WUNDERGROUND_ID, WUNDERGROUND_PWD, observations);
+    const laCrosseObservations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID);
+    const observations = convertLaCrosseObservations(laCrosseObservations);
+    const wundergroundObservations = await submitToWunderground(
+      WUNDERGROUND_ID,
+      WUNDERGROUND_PWD,
+      observations
+    );
 
-    console.log(result);
+    console.log({ laCrosseObservations, observations, wundergroundObservations });
   } catch (error) {
     console.error(error);
     process.exit(1);
