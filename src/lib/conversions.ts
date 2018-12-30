@@ -12,12 +12,12 @@ export function celsiusToFahrenheit(c: number) {
   return round(c * 1.8 + 32, 1);
 }
 
-export function inchesToCentimeters(i: number) {
-  return round(i * 2.54, 1);
+export function inchesToMillimeters(i: number) {
+  return round(i * 25.4, 1);
 }
 
-export function centimetersToInches(cm: number) {
-  return round(cm / 2.54, 1);
+export function millimetersToInches(cm: number) {
+  return round(cm / 25.4, 1);
 }
 
 export function milesToKilometers(m: number) {
