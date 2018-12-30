@@ -25,15 +25,23 @@ export async function handler(event: Event) {
   }
 
   const results = await Promise.all(
-    event.Records.map(record => JSON.parse(record.body)).map((notification: SNSNotification) =>
-      submitToWunderground(
-        WUNDERGROUND_ID,
-        WUNDERGROUND_PWD,
-        JSON.parse(notification.Message)
-      ).then(result => ({
-        messageId: notification.MessageId,
-        ...result,
-      }))
+    event.Records.map(record => JSON.parse(record.body)).map(
+      async (notification: SNSNotification) => {
+        const observations = JSON.parse(notification.Message);
+
+        const wundergroundObservations = await submitToWunderground(
+          WUNDERGROUND_ID,
+          WUNDERGROUND_PWD,
+          observations
+        );
+
+        return {
+          messageId: notification.MessageId,
+          observations,
+          wundergroundObservations,
+          stationId: WUNDERGROUND_ID,
+        };
+      }
     )
   );
 

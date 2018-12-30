@@ -1,12 +1,13 @@
 import * as AWS from 'aws-sdk';
 
-import getObservationsFromLaCrosse from './lib/getObservationsFromLaCrosse';
-
-const { LA_CROSSE_DEVICE_ID, TOPIC_ARN } = process.env;
+import getLaCrosseObservations from './lib/getLaCrosseObservations';
+import convertLaCrosseObservations from './lib/convertLaCrosseObservations';
 
 const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
 
 export async function handler() {
+  const { LA_CROSSE_DEVICE_ID, TOPIC_ARN } = process.env;
+
   if (!LA_CROSSE_DEVICE_ID) {
     throw new Error('No LA_CROSSE_DEVICE_ID defined');
   }
@@ -15,7 +16,9 @@ export async function handler() {
     throw new Error('No TOPIC_ARN defined');
   }
 
-  const observations = await getObservationsFromLaCrosse(LA_CROSSE_DEVICE_ID);
+  const laCrosseObservations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID);
+
+  const observations = convertLaCrosseObservations(laCrosseObservations);
 
   const result = await sns
     .publish({
@@ -25,6 +28,11 @@ export async function handler() {
     .promise();
 
   console.log(
-    JSON.stringify({ messageId: result.MessageId, observations, deviceId: LA_CROSSE_DEVICE_ID })
+    JSON.stringify({
+      messageId: result.MessageId,
+      laCrosseObservations,
+      observations,
+      deviceId: LA_CROSSE_DEVICE_ID,
+    })
   );
 }

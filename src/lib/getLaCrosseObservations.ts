@@ -1,6 +1,5 @@
 import get from './get';
-import convertLaCrosseToWundergroundObservations from './convertLaCrosseToWundergroundObservations';
-import { WundergroundObservations, LaCrosseObservations } from '../types';
+import { LaCrosseObservations } from '../types';
 
 interface LaCrosseResponse {
   device0: {
@@ -10,9 +9,9 @@ interface LaCrosseResponse {
   device_id: string;
 }
 
-export default async function getObservationsFromLaCrosse(
+export default async function getLaCrosseObservations(
   deviceId: string
-): Promise<WundergroundObservations> {
+): Promise<LaCrosseObservations> {
   const body = await get({
     host: 'lacrossealertsmobile.com',
     path: `/laxservices/device_info.php?deviceid=${deviceId}`,
@@ -20,5 +19,5 @@ export default async function getObservationsFromLaCrosse(
 
   const laCrosseResponse = JSON.parse(body) as LaCrosseResponse;
 
-  return convertLaCrosseToWundergroundObservations(laCrosseResponse.device0.obs[0]);
+  return laCrosseResponse.device0.obs[0];
 }

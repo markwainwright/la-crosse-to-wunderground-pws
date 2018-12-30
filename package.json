@@ -4,7 +4,7 @@
   "scripts": {
     "build": "tsc",
     "deploy": "NODE_PRESERVE_SYMLINKS=1 serverless deploy",
-    "start": "npm run build && node dist/local.js",
+    "start": "ts-node src/local.ts",
     "test": "jest"
   },
   "author": "Mark Wainwright",
@@ -20,6 +20,7 @@
     "serverless": "^1.35.1",
     "serverless-plugin-typescript": "^1.1.5",
     "ts-jest": "^23.10.5",
+    "ts-node": "^7.0.1",
     "typescript": "^3.2.2"
   }
 }

@@ -1,5 +1,6 @@
 import get from './get';
-import { WundergroundObservations } from '../types';
+import { Observations, WundergroundObservations } from '../types';
+import convertToWundergroundObservations from './convertToWundergroundObservations';
 
 interface WundergroundParams extends WundergroundObservations {
   dateutc: string;
@@ -11,12 +12,13 @@ interface WundergroundParams extends WundergroundObservations {
 export default async function submitToWunderground(
   stationId: string,
   password: string,
-  observations: WundergroundObservations
+  observations: Observations
 ) {
-  // See http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocol
+  // See http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocolc
+  const wundergroundObservations = convertToWundergroundObservations(observations);
   const params: WundergroundParams = {
     dateutc: 'now',
-    ...observations,
+    ...wundergroundObservations,
     action: 'updateraw',
     ID: stationId,
     PASSWORD: password,
@@ -31,9 +33,9 @@ export default async function submitToWunderground(
     path: `/weatherstation/updateweatherstation.php?${queryString}`,
   });
 
-  if (body.trim() === 'success') {
-    return { observations, stationId };
-  } else {
+  if (body.trim() !== 'success') {
     throw new Error(`Unknown Wunderground response: ${body}`);
   }
+
+  return wundergroundObservations;
 }

@@ -25,6 +25,26 @@ export interface LaCrosseObservations {
   utctime: number;
 }
 
+export interface Observations {
+  timestamp: string;
+  outdoor: {
+    dewPoint: number;
+    humidity: number;
+    pressure: number;
+    rainDay: number;
+    rainHour: number;
+    rainWeek: number;
+    temperature: number;
+    windDirection: number;
+    windGust: number;
+    windSpeed: number;
+  };
+  indoor: {
+    temperature: number;
+    humidity: number;
+  };
+}
+
 export interface WundergroundObservations {
   tempf: number;
   humidity: number;
