@@ -1,4 +1,5 @@
 import submitToWunderground from './lib/submitToWunderground';
+import writeToS3 from './lib/writeToS3';
 
 interface Event {
   Records: {
@@ -13,7 +14,7 @@ interface SNSNotification {
   Message: string;
 }
 
-const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
+const { S3_BUCKET_NAME, WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
 
 export async function handler(event: Event) {
   if (!WUNDERGROUND_ID) {
@@ -24,10 +25,16 @@ export async function handler(event: Event) {
     throw new Error('No WUNDERGROUND_PWD defined');
   }
 
+  if (!S3_BUCKET_NAME) {
+    throw new Error('No S3_BUCKET_NAME defined');
+  }
+
   const results = await Promise.all(
     event.Records.map(record => JSON.parse(record.body)).map(
       async (notification: SNSNotification) => {
         const observations = JSON.parse(notification.Message);
+
+        await writeToS3(S3_BUCKET_NAME, observations);
 
         const wundergroundObservations = await submitToWunderground(
           WUNDERGROUND_ID,

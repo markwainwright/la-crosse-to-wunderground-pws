@@ -11,6 +11,7 @@ provider:
   timeout: 5
   memorySize: 128
   versionFunctions: false
+  variableSyntax: '\$\${([\s\S]+?)}'
   iamRoleStatements:
     # TODO: We should really have one role for each function. I tried using the
     # serverless-iam-roles-per-function plugin but that does not apply the built-in SQS policy to
@@ -20,24 +21,32 @@ provider:
       Action: sns:Publish
       Resource:
         Ref: Topic
+    - Effect: Allow
+      Action: s3:PutObject
+      Resource:
+        Fn::Sub: '${ObservationsBucket.Arn}/*'
 
 functions:
   reader:
     handler: src/reader.handler
     environment:
-      LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
+      LA_CROSSE_DEVICE_ID: $${env:LA_CROSSE_DEVICE_ID}
       TOPIC_ARN:
         Ref: Topic
-    description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
+    description:
+      Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
     events:
       - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
 
   writer:
     handler: src/writer.handler
     environment:
-      WUNDERGROUND_ID: ${env:WUNDERGROUND_ID}
-      WUNDERGROUND_PWD: ${env:WUNDERGROUND_PWD}
-    description: Receives weather observations from an SQS queue and submits them to Weather Underground PWS
+      WUNDERGROUND_ID: $${env:WUNDERGROUND_ID}
+      WUNDERGROUND_PWD: $${env:WUNDERGROUND_PWD}
+      S3_BUCKET_NAME:
+        Ref: ObservationsBucket
+    description:
+      Receives weather observations from an SQS queue and submits them to Weather Underground PWS
     events:
       - sqs:
           arn:
@@ -46,6 +55,16 @@ functions:
 
 resources:
   Resources:
+    ObservationsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: mark-wainwright-weather-observations
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          BlockPublicPolicy: true
+          IgnorePublicAcls: true
+          RestrictPublicBuckets: true
+
     Topic:
       Type: AWS::SNS::Topic
       Properties:
@@ -72,7 +91,7 @@ resources:
               Resource:
                 Fn::GetAtt: [Queue, Arn]
               Principal:
-                AWS: "*"
+                AWS: '*'
               Condition:
                 ArnEquals:
                   aws:SourceArn:
@@ -82,7 +101,7 @@ resources:
       Type: AWS::SNS::Topic
       Properties:
         Subscription:
-          - Endpoint: ${env:ALARM_EMAIL}
+          - Endpoint: $${env:ALARM_EMAIL}
             Protocol: email
 
     ReaderErrorAlarm:
