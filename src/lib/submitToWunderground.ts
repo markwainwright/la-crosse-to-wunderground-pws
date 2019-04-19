@@ -1,8 +1,11 @@
+import * as querystring from 'querystring';
+
 import get from './get';
 import { Observations, WundergroundObservations } from '../types';
 import convertToWundergroundObservations from './convertToWundergroundObservations';
 
 interface WundergroundParams extends WundergroundObservations {
+  [key: string]: string | number;
   dateutc: string;
   action: 'updateraw';
   ID: string;
@@ -24,13 +27,9 @@ export default async function submitToWunderground(
     PASSWORD: password,
   };
 
-  const queryString = (Object.keys(params) as (keyof WundergroundParams)[])
-    .map(key => `${key}=${encodeURIComponent((params[key] || '').toString())}`)
-    .join('&');
-
   const body = await get({
     host: 'weatherstation.wunderground.com',
-    path: `/weatherstation/updateweatherstation.php?${queryString}`,
+    path: `/weatherstation/updateweatherstation.php?${querystring.stringify(params)}`,
   });
 
   if (body.trim() !== 'success') {
