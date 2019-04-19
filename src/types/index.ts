@@ -48,7 +48,7 @@ export interface Observations {
 export interface WundergroundObservations {
   tempf: number;
   humidity: number;
-  winddir?: number;
+  winddir: number;
   windspeedmph: number;
   windgustmph: number;
   rainin: number;
