@@ -1,4 +1,4 @@
-import * as querystring from 'querystring';
+import querystring from 'querystring';
 
 import get from './get';
 import { Observations, WundergroundObservations } from '../types';

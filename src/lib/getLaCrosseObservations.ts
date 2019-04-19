@@ -9,9 +9,7 @@ interface LaCrosseResponse {
   device_id: string;
 }
 
-export default async function getLaCrosseObservations(
-  deviceId: string
-): Promise<LaCrosseObservations> {
+export default async function getLaCrosseObservations(deviceId: string) {
   const body = await get({
     host: 'lacrossealertsmobile.com',
     path: `/laxservices/device_info.php?deviceid=${deviceId}`,
