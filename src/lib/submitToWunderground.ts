@@ -14,7 +14,7 @@ export default async function submitToWunderground(
   password: string,
   observations: Observations
 ) {
-  // See http://wiki.wunderground.com/index.php/PWS_-_Upload_Protocolc
+  // See https://feedback.weather.com/customer/en/portal/articles/2924682-pws-upload-protocol
   const wundergroundObservations = convertToWundergroundObservations(observations);
   const params: WundergroundParams = {
     dateutc: 'now',
