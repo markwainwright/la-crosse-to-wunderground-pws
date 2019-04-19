@@ -1,7 +1,7 @@
-import * as http from 'http';
+import http from 'http';
 
 export default function get(options: http.RequestOptions) {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<string>((resolve, reject) =>
     http
       .get(options, response => {
         if (response.statusCode && (response.statusCode >= 300 || response.statusCode < 200)) {
@@ -9,18 +9,18 @@ export default function get(options: http.RequestOptions) {
           return reject(new Error(`${response.statusCode} ${response.statusMessage}`));
         }
 
-        const body: string[] = [];
+        let body = '';
 
         response
           .setEncoding('utf8')
           .on('data', chunk => {
             if (typeof chunk === 'string') {
-              body.push(chunk);
+              body += chunk;
             }
             // TODO: Buffer?
           })
-          .on('end', () => resolve(body.join('')));
+          .on('end', () => resolve(body));
       })
-      .on('error', reject);
-  });
+      .on('error', reject)
+  );
 }

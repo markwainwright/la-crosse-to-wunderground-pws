@@ -1,9 +1,9 @@
-import * as AWS from 'aws-sdk';
+import { SNS } from 'aws-sdk';
 
 import getLaCrosseObservations from './lib/getLaCrosseObservations';
 import convertLaCrosseObservations from './lib/convertLaCrosseObservations';
 
-const sns = new AWS.SNS({ apiVersion: '2010-03-31' });
+const sns = new SNS({ apiVersion: '2010-03-31' });
 
 export async function handler() {
   const { LA_CROSSE_DEVICE_ID, TOPIC_ARN } = process.env;
