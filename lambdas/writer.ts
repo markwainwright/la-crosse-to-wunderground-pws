@@ -1,22 +1,11 @@
+import { SNSMessage, SQSEvent } from 'aws-lambda';
+
 import submitToWunderground from '../lib/submitToWunderground';
 import writeToS3 from '../lib/writeToS3';
 
-interface Event {
-  Records: {
-    messageId: string;
-    body: string; // SNSNotification as JSON string
-  }[];
-}
-
-interface SNSNotification {
-  Type: 'Notification';
-  MessageId: string;
-  Message: string;
-}
-
 const { S3_BUCKET_NAME, WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
 
-export async function handler(event: Event) {
+export async function handler(event: SQSEvent) {
   if (!WUNDERGROUND_ID) {
     throw new Error('No WUNDERGROUND_ID defined');
   }
@@ -29,27 +18,27 @@ export async function handler(event: Event) {
     throw new Error('No S3_BUCKET_NAME defined');
   }
 
+  const messages = event.Records.map(record => JSON.parse(record.body) as SNSMessage);
+
   const results = await Promise.all(
-    event.Records.map(record => JSON.parse(record.body)).map(
-      async (notification: SNSNotification) => {
-        const observations = JSON.parse(notification.Message);
+    messages.map(async message => {
+      const observations = JSON.parse(message.Message);
 
-        await writeToS3(S3_BUCKET_NAME, observations);
+      await writeToS3(S3_BUCKET_NAME, observations);
 
-        const wundergroundObservations = await submitToWunderground(
-          WUNDERGROUND_ID,
-          WUNDERGROUND_PWD,
-          observations
-        );
+      const wundergroundObservations = await submitToWunderground(
+        WUNDERGROUND_ID,
+        WUNDERGROUND_PWD,
+        observations
+      );
 
-        return {
-          messageId: notification.MessageId,
-          observations,
-          wundergroundObservations,
-          stationId: WUNDERGROUND_ID,
-        };
-      }
-    )
+      return {
+        messageId: message.MessageId,
+        observations,
+        wundergroundObservations,
+        stationId: WUNDERGROUND_ID,
+      };
+    })
   );
 
   results.forEach(result => console.log(JSON.stringify(result)));
