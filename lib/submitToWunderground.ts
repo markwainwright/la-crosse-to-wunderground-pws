@@ -1,11 +1,9 @@
-import querystring from 'querystring';
+import axios from 'axios';
 
-import get from './get';
 import { Observations, WundergroundObservations } from './types';
 import convertToWundergroundObservations from './convertToWundergroundObservations';
 
 interface WundergroundParams extends WundergroundObservations {
-  [key: string]: string | number;
   dateutc: string;
   action: 'updateraw';
   ID: string;
@@ -27,13 +25,13 @@ export default async function submitToWunderground(
     PASSWORD: password,
   };
 
-  const body = await get({
-    host: 'weatherstation.wunderground.com',
-    path: `/weatherstation/updateweatherstation.php?${querystring.stringify(params)}`,
-  });
+  const { data } = await axios.get<string>(
+    'http://weatherstation.wunderground.com/weatherstation/updateweatherstation.php',
+    { params }
+  );
 
-  if (body.trim() !== 'success') {
-    throw new Error(`Unknown Wunderground response: ${body}`);
+  if (data.trim() !== 'success') {
+    throw new Error(`Unknown Wunderground response: ${data}`);
   }
 
   return wundergroundObservations;
