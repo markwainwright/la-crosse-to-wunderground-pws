@@ -1,4 +1,5 @@
-import get from './get';
+import axios from 'axios';
+
 import { LaCrosseObservations } from './types';
 
 interface LaCrosseResponse {
@@ -10,12 +11,13 @@ interface LaCrosseResponse {
 }
 
 export default async function getLaCrosseObservations(deviceId: string) {
-  const body = await get({
-    host: 'lacrossealertsmobile.com',
-    path: `/laxservices/device_info.php?deviceid=${deviceId}`,
-  });
+  const { data } = await axios.get<LaCrosseResponse | string>(
+    `http://lacrossealertsmobile.com/laxservices/device_info.php?deviceid=${deviceId}`
+  );
 
-  const laCrosseResponse = JSON.parse(body) as LaCrosseResponse;
+  if (typeof data !== 'object') {
+    throw new Error(`Unknown La Crosse response: ${data}`);
+  }
 
-  return laCrosseResponse.device0.obs[0];
+  return data.device0.obs[0];
 }
