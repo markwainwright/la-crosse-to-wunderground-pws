@@ -10,6 +10,7 @@
   },
   "scripts": {
     "deploy": "npm run test && NODE_PRESERVE_SYMLINKS=1 serverless deploy",
+    "invoke": "serverless invoke -f reader",
     "start": "ts-node run.ts",
     "test": "jest"
   },
