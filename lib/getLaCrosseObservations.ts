@@ -1,5 +1,5 @@
 import get from './get';
-import { LaCrosseObservations } from '../types';
+import { LaCrosseObservations } from './types';
 
 interface LaCrosseResponse {
   device0: {

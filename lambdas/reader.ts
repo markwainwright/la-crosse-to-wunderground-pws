@@ -1,7 +1,7 @@
 import { SNS } from 'aws-sdk';
 
-import getLaCrosseObservations from './lib/getLaCrosseObservations';
-import convertLaCrosseObservations from './lib/convertLaCrosseObservations';
+import getLaCrosseObservations from '../lib/getLaCrosseObservations';
+import convertLaCrosseObservations from '../lib/convertLaCrosseObservations';
 
 const sns = new SNS({ apiVersion: '2010-03-31' });
 

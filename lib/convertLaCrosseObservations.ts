@@ -1,4 +1,4 @@
-import { Observations, LaCrosseObservations } from '../types';
+import { Observations, LaCrosseObservations } from './types';
 
 import {
   compassToDegrees,

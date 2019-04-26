@@ -10,7 +10,6 @@
     "outDir": "./dist/",
     "strict": true,
     "target": "es2017",
-    "typeRoots": ["node_modules/@types", "src/types"]
-  },
-  "include": ["src"]
+    "typeRoots": ["node_modules/@types", "lib/types"]
+  }
 }

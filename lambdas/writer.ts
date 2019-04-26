@@ -1,5 +1,5 @@
-import submitToWunderground from './lib/submitToWunderground';
-import writeToS3 from './lib/writeToS3';
+import submitToWunderground from '../lib/submitToWunderground';
+import writeToS3 from '../lib/writeToS3';
 
 interface Event {
   Records: {

@@ -1,7 +1,7 @@
 import querystring from 'querystring';
 
 import get from './get';
-import { Observations, WundergroundObservations } from '../types';
+import { Observations, WundergroundObservations } from './types';
 import convertToWundergroundObservations from './convertToWundergroundObservations';
 
 interface WundergroundParams extends WundergroundObservations {
