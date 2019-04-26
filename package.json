@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "deploy": "npm run test && NODE_PRESERVE_SYMLINKS=1 serverless deploy",
-    "start": "ts-node src/local.ts",
+    "start": "ts-node run.ts",
     "test": "jest"
   },
   "author": "Mark Wainwright",

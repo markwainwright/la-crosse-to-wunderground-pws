@@ -4,7 +4,7 @@ import {
   millimetersToInches,
   hPaToInHg,
 } from './conversions';
-import { Observations, WundergroundObservations } from '../types';
+import { Observations, WundergroundObservations } from './types';
 
 export default function convertLaCrosseToWundergroundObservations(
   observations: Observations

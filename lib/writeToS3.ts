@@ -1,6 +1,6 @@
 import { S3 } from 'aws-sdk';
 
-import { Observations } from '../types';
+import { Observations } from './types';
 
 const s3 = new S3();
 

@@ -9,7 +9,7 @@ provider:
   region: us-west-2
   stage: production
   timeout: 5
-  memorySize: 128
+  memorySize: 512
   versionFunctions: false
   variableSyntax: '\$\${([\s\S]+?)}'
   iamRoleStatements:
@@ -28,7 +28,7 @@ provider:
 
 functions:
   reader:
-    handler: src/reader.handler
+    handler: lambdas/reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: $${env:LA_CROSSE_DEVICE_ID}
       TOPIC_ARN:
@@ -39,12 +39,11 @@ functions:
       - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
 
   writer:
-    handler: src/writer.handler
+    handler: lambdas/writer.handler
     environment:
       WUNDERGROUND_ID: $${env:WUNDERGROUND_ID}
       WUNDERGROUND_PWD: $${env:WUNDERGROUND_PWD}
-      S3_BUCKET_NAME:
-        Ref: ObservationsBucket
+      S3_BUCKET_NAME: !Ref ObservationsBucket
     description:
       Receives weather observations from an SQS queue and submits them to Weather Underground PWS
     events:
@@ -58,7 +57,8 @@ resources:
     ObservationsBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: mark-wainwright-weather-observations
+        BucketName:
+          Fn::Sub: '${AWS::StackName}-observations'
         PublicAccessBlockConfiguration:
           BlockPublicAcls: true
           BlockPublicPolicy: true

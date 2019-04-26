@@ -1,4 +1,4 @@
-import convertToWundergroundObservations from '../src/lib/convertToWundergroundObservations';
+import convertToWundergroundObservations from '../lib/convertToWundergroundObservations';
 
 describe('convertToWundergroundObservations', () => {
   test('should correctly map to Wunderground shape', () => {
