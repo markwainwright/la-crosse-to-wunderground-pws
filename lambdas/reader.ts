@@ -27,12 +27,14 @@ export async function handler() {
     })
     .promise();
 
-  console.log(
-    JSON.stringify({
-      messageId,
-      laCrosseObservations,
-      observations,
-      deviceId: LA_CROSSE_DEVICE_ID,
-    })
-  );
+  const result = {
+    messageId,
+    laCrosseObservations,
+    observations,
+    deviceId: LA_CROSSE_DEVICE_ID,
+  };
+
+  console.log(JSON.stringify(result));
+
+  return result;
 }

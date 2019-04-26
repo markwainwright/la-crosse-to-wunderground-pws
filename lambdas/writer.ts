@@ -42,4 +42,6 @@ export async function handler(event: SQSEvent) {
   );
 
   results.forEach(result => console.log(JSON.stringify(result)));
+
+  return results;
 }
