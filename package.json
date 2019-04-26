@@ -9,7 +9,6 @@
     "url": "git+https://github.com/markwainwright/la-crosse-to-wunderground-pws.git"
   },
   "scripts": {
-    "build": "tsc",
     "deploy": "npm run test && NODE_PRESERVE_SYMLINKS=1 serverless deploy",
     "start": "ts-node src/local.ts",
     "test": "jest"

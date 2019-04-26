@@ -1,19 +1,15 @@
 {
   "compilerOptions": {
-    "alwaysStrict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
-    "lib": ["es5", "es2015.promise"],
     "module": "CommonJS",
     "moduleResolution": "node",
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "outDir": "./dist/",
-    "sourceMap": true,
     "strict": true,
-    "target": "es5",
+    "target": "es2017",
     "typeRoots": ["node_modules/@types", "src/types"]
   },
   "include": ["src"]
