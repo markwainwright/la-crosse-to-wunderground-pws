@@ -20,7 +20,7 @@ export async function handler() {
 
   const observations = convertLaCrosseObservations(laCrosseObservations);
 
-  const result = await sns
+  const { MessageId: messageId } = await sns
     .publish({
       TopicArn: TOPIC_ARN,
       Message: JSON.stringify(observations),
@@ -29,7 +29,7 @@ export async function handler() {
 
   console.log(
     JSON.stringify({
-      messageId: result.MessageId,
+      messageId,
       laCrosseObservations,
       observations,
       deviceId: LA_CROSSE_DEVICE_ID,
