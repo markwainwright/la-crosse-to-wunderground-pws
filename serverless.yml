@@ -2,6 +2,7 @@ service: la-crosse-to-wunderground
 
 plugins:
   - serverless-plugin-typescript
+  - serverless-pseudo-parameters
   - serverless-iam-roles-per-function
 
 provider:
@@ -142,3 +143,74 @@ resources:
           - Ref: AlarmTopic
         OKActions:
           - Ref: AlarmTopic
+
+    CDUser:
+      Type: AWS::IAM::User
+      Properties:
+        UserName: ${self:service}
+        Path: '/cd/'
+        Policies:
+          - PolicyName: Deploy
+            PolicyDocument:
+              Statement:
+                # These permissions allow the stack and lambda function code to be updated by GitHub
+                # Actions. They do not allow changes to the topic, queue, or alarms currently –
+                # deploys requiring changes to them will need to be done by a more privileged user.
+
+                - Effect: Allow
+                  Action:
+                    - cloudformation:Describe*
+                    - cloudformation:List*
+                    - cloudformation:Get*
+                    - cloudformation:PreviewStackUpdate
+                    - cloudformation:ValidateTemplate
+                  Resource: '*'
+
+                - Effect: Allow
+                  Action:
+                    - cloudformation:CreateStack
+                    - cloudformation:UpdateStack
+                    - cloudformation:DeleteStack
+                  Resource:
+                    - arn:aws:cloudformation:#{AWS::Region}:#{AWS::AccountId}:stack/#{AWS::StackName}/*
+
+                - Effect: Allow
+                  Action: s3:*
+                  Resource:
+                    - !GetAtt ServerlessDeploymentBucket.Arn
+                    - !Join
+                      - '/'
+                      - - !GetAtt ServerlessDeploymentBucket.Arn
+                        - '*'
+
+                - Effect: Allow
+                  Action: lambda:*
+                  Resource: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:#{AWS::StackName}*
+
+                - Effect: Allow
+                  Action:
+                    - iam:GetRole
+                    - iam:PassRole
+                    - iam:DeleteRolePolicy
+                    - iam:CreateRole
+                    - iam:DeleteRole
+                    - iam:AttachRolePolicy
+                    - iam:DetachRolePolicy
+                    - iam:PutRolePolicy
+                  Resource:
+                    - !GetAtt ReaderIamRoleLambdaExecution.Arn
+                    - !GetAtt WriterIamRoleLambdaExecution.Arn
+
+    CDUserAccessKey:
+      Type: AWS::IAM::AccessKey
+      Properties:
+        UserName: !Ref CDUser
+
+    CDUserAccessKeySecret:
+      Type: AWS::SecretsManager::Secret
+      Properties:
+        Name: '/cd/${self:service}/accessKey'
+        SecretString: !Join
+          - ' / '
+          - - !Ref CDUserAccessKey
+            - !GetAtt CDUserAccessKey.SecretAccessKey
