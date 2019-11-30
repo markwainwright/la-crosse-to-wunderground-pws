@@ -11,7 +11,7 @@ provider:
   region: us-west-2
   stage: production
   timeout: 5
-  memorySize: 512
+  memorySize: 1024
   versionFunctions: false
 
 functions:
