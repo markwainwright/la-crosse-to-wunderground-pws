@@ -1,8 +1,8 @@
 {
-  "name": "la-crosse-to-wunderground-pws",
+  "name": "la-crosse-to-wunderground",
   "version": "1.0.0",
   "scripts": {
-    "deploy": "npm run test && NODE_PRESERVE_SYMLINKS=1 serverless deploy",
+    "deploy": "serverless deploy",
     "invoke": "serverless invoke -f reader",
     "start": "ts-node run.ts",
     "test": "jest"
@@ -20,6 +20,7 @@
     "aws-sdk": "2.580.0",
     "jest": "^24.9.0",
     "serverless": "^1.58.0",
+    "serverless-iam-roles-per-function": "^2.0.2",
     "serverless-plugin-typescript": "^1.1.9",
     "ts-jest": "^24.2.0",
     "ts-node": "^8.5.4",

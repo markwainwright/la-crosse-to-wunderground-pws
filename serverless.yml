@@ -2,6 +2,7 @@ service: la-crosse-to-wunderground
 
 plugins:
   - serverless-plugin-typescript
+  - serverless-iam-roles-per-function
 
 provider:
   name: aws
@@ -11,21 +12,6 @@ provider:
   timeout: 5
   memorySize: 512
   versionFunctions: false
-  iamRoleStatements:
-    # TODO: We should really have one role for each function. I tried using the
-    # serverless-iam-roles-per-function plugin but that does not apply the built-in SQS policy to
-    # the writer role. We could use that plugin and write our own SQS policy in iamRoleStatements
-    # I suppose.
-    - Effect: Allow
-      Action: sns:Publish
-      Resource:
-        Ref: Topic
-    - Effect: Allow
-      Action: s3:PutObject
-      Resource: !Join
-        - '/'
-        - - !GetAtt ObservationsBucket.Arn
-          - '*'
 
 functions:
   reader:
@@ -38,6 +24,11 @@ functions:
       Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
     events:
       - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
+    iamRoleStatements:
+      - Effect: Allow
+        Action: sns:Publish
+        Resource:
+          Ref: Topic
 
   writer:
     handler: lambdas/writer.handler
@@ -51,6 +42,13 @@ functions:
       - sqs:
           arn: !GetAtt Queue.Arn
           batchSize: 1
+    iamRoleStatements:
+      - Effect: Allow
+        Action: s3:PutObject
+        Resource: !Join
+          - '/'
+          - - !GetAtt ObservationsBucket.Arn
+            - '*'
 
 resources:
   Resources:
