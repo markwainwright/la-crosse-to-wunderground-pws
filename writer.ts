@@ -1,7 +1,7 @@
 import { SNSMessage, SQSEvent } from 'aws-lambda';
 
-import submitToWunderground from '../lib/submitToWunderground';
-import writeToS3 from '../lib/writeToS3';
+import submitToWunderground from './lib/submitToWunderground';
+import writeToS3 from './lib/writeToS3';
 
 const { S3_BUCKET_NAME, WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
 
@@ -20,28 +20,24 @@ export async function handler(event: SQSEvent) {
 
   const messages = event.Records.map(record => JSON.parse(record.body) as SNSMessage);
 
-  const results = await Promise.all(
+  await Promise.all(
     messages.map(async message => {
       const observations = JSON.parse(message.Message);
 
-      await writeToS3(S3_BUCKET_NAME, observations);
+      const [wundergroundObservations, s3Uri] = await Promise.all([
+        submitToWunderground(WUNDERGROUND_ID, WUNDERGROUND_PWD, observations),
+        writeToS3(S3_BUCKET_NAME, observations),
+      ]);
 
-      const wundergroundObservations = await submitToWunderground(
-        WUNDERGROUND_ID,
-        WUNDERGROUND_PWD,
-        observations
+      console.log(
+        JSON.stringify({
+          messageId: message.MessageId,
+          observations,
+          wundergroundObservations,
+          stationId: WUNDERGROUND_ID,
+          s3Uri,
+        })
       );
-
-      return {
-        messageId: message.MessageId,
-        observations,
-        wundergroundObservations,
-        stationId: WUNDERGROUND_ID,
-      };
     })
   );
-
-  results.forEach(result => console.log(JSON.stringify(result)));
-
-  return results;
 }

@@ -16,7 +16,7 @@ provider:
 
 functions:
   reader:
-    handler: lambdas/reader.handler
+    handler: reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
       TOPIC_ARN:
@@ -32,7 +32,7 @@ functions:
           Ref: Topic
 
   writer:
-    handler: lambdas/writer.handler
+    handler: writer.handler
     environment:
       WUNDERGROUND_ID: ${env:WUNDERGROUND_ID}
       WUNDERGROUND_PWD: ${env:WUNDERGROUND_PWD}
