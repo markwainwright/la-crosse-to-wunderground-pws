@@ -221,11 +221,18 @@ resources:
       Properties:
         UserName: !Ref CDUser
 
-    CDUserAccessKeySecret:
-      Type: AWS::SecretsManager::Secret
+    CDUserAccessKeyParam:
+      Type: AWS::SSM::Parameter
       Properties:
         Name: '/cd/${self:service}/accessKey'
-        SecretString: !Join
-          - ' / '
-          - - !Ref CDUserAccessKey
-            - !GetAtt CDUserAccessKey.SecretAccessKey
+        Tier: Standard
+        Type: String
+        Value: !Ref CDUserAccessKey
+
+    CDUserSecretAccessKeyParam:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Name: '/cd/${self:service}/secretAccessKey'
+        Tier: Standard
+        Type: String
+        Value: !GetAtt CDUserAccessKey.SecretAccessKey
