@@ -9,6 +9,6 @@
     "noUnusedParameters": true,
     "strict": true,
     "target": "es2017",
-    "typeRoots": ["node_modules/@types", "lib/types"]
+    "typeRoots": ["node_modules/@types", "src/lib/types"]
   }
 }

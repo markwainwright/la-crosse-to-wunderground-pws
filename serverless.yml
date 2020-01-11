@@ -16,7 +16,7 @@ provider:
 
 functions:
   reader:
-    handler: reader.handler
+    handler: src/reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
     description:
@@ -26,21 +26,30 @@ functions:
     iamRoleStatements:
       - Effect: Allow
         Action: sns:Publish
-        Resource:
-          Ref: Topic
+        Resource: !Ref Topic
 
   writer:
-    handler: writer.handler
+    handler: src/writer.handler
     environment:
       WUNDERGROUND_ID: ${env:WUNDERGROUND_ID}
       WUNDERGROUND_PWD: ${env:WUNDERGROUND_PWD}
-      S3_BUCKET_NAME: !Ref ObservationsBucket
     description:
       Receives weather observations from an SQS queue and submits them to Weather Underground PWS
     events:
       - sqs:
           arn: !GetAtt Queue.Arn
           batchSize: 1
+    iamRoleStatements: []
+
+  s3Writer:
+    handler: src/s3-writer.handler
+    environment:
+      S3_BUCKET_NAME: !Ref ObservationsBucket
+    description: Receives weather observations from an SNS topic and saves them to an S3 bucket
+    events:
+      - sns:
+          arn: !Ref Topic
+          topicName: ObservationsTopic
     iamRoleStatements:
       - Effect: Allow
         Action: s3:PutObject
@@ -89,7 +98,7 @@ resources:
       Type: AWS::SQS::QueuePolicy
       Properties:
         Queues:
-          - Ref: Queue
+          - !Ref Queue
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
@@ -100,8 +109,7 @@ resources:
                 AWS: '*'
               Condition:
                 ArnEquals:
-                  aws:SourceArn:
-                    Ref: Topic
+                  aws:SourceArn: !Ref Topic
 
     AlarmTopic:
       Type: AWS::SNS::Topic
@@ -126,9 +134,9 @@ resources:
         Period: 1200 # 20 mins
         EvaluationPeriods: 2
         AlarmActions:
-          - Ref: AlarmTopic
+          - !Ref AlarmTopic
         OKActions:
-          - Ref: AlarmTopic
+          - !Ref AlarmTopic
 
     QueueMessagesAlarm:
       Type: AWS::CloudWatch::Alarm
@@ -146,9 +154,9 @@ resources:
         Period: 300
         EvaluationPeriods: 1
         AlarmActions:
-          - Ref: AlarmTopic
+          - !Ref AlarmTopic
         OKActions:
-          - Ref: AlarmTopic
+          - !Ref AlarmTopic
 
     CDUser:
       Type: AWS::IAM::User
@@ -206,6 +214,7 @@ resources:
                   Resource:
                     - !GetAtt ReaderIamRoleLambdaExecution.Arn
                     - !GetAtt WriterIamRoleLambdaExecution.Arn
+                    - !GetAtt S3WriterIamRoleLambdaExecution.Arn
 
     CDUserAccessKey:
       Type: AWS::IAM::AccessKey
