@@ -22,7 +22,7 @@ export async function handler(event: SQSEvent) {
 
   await Promise.all(
     messages.map(async message => {
-      const observations = JSON.parse(message.Message);
+      const observations = JSON.parse(message.Message).responsePayload;
 
       const [wundergroundObservations, s3Uri] = await Promise.all([
         submitToWunderground(WUNDERGROUND_ID, WUNDERGROUND_PWD, observations),
