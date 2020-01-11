@@ -19,8 +19,6 @@ functions:
     handler: reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
-      TOPIC_ARN:
-        Ref: Topic
     description:
       Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
     events:
@@ -66,6 +64,15 @@ resources:
           IgnorePublicAcls: true
           RestrictPublicBuckets: true
 
+    ReaderLambdaEventInvokeConfig:
+      Type: AWS::Lambda::EventInvokeConfig
+      Properties:
+        FunctionName: !Ref ReaderLambdaFunction
+        Qualifier: $LATEST
+        DestinationConfig:
+          OnSuccess:
+            Destination: !Ref Topic
+
     Topic:
       Type: AWS::SNS::Topic
       Properties:
@@ -110,8 +117,7 @@ resources:
         AlarmDescription: Reader errors has hit threshold
         Dimensions:
           - Name: FunctionName
-            Value:
-              Ref: ReaderLambdaFunction
+            Value: !Ref ReaderLambdaFunction
         MetricName: Errors
         ComparisonOperator: GreaterThanThreshold
         Statistic: Sum
