@@ -1,4 +1,4 @@
-import convertLaCrosseObservations from '../lib/convertLaCrosseObservations';
+import convertLaCrosseObservations from '../src/lib/convertLaCrosseObservations';
 
 describe('convertLaCrosseObservations', () => {
   test('should correctly map La Crosse to Observations shape', () => {
