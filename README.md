@@ -23,3 +23,7 @@ npm test
 ```sh
 npm run deploy
 ```
+
+## System diagram
+
+![](doc/diagram.svg)
