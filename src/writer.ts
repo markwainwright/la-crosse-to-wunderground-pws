@@ -1,6 +1,7 @@
 import { SNSMessage, SQSEvent } from 'aws-lambda';
 
 import submitToWunderground from './lib/submitToWunderground';
+import { ReaderLambdaMessage } from './lib/types';
 
 const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
 
@@ -13,11 +14,18 @@ export async function handler(event: SQSEvent) {
     throw new Error('No WUNDERGROUND_PWD defined');
   }
 
-  const messages = event.Records.map(record => JSON.parse(record.body) as SNSMessage);
+  const sqsRecords = event.Records;
 
   await Promise.all(
-    messages.map(async message => {
-      const observations = JSON.parse(message.Message).responsePayload;
+    sqsRecords.map(async (record) => {
+      const sqsMessageId = record.messageId;
+
+      const snsMessage = JSON.parse(record.body) as SNSMessage;
+      const snsMessageId = snsMessage.MessageId;
+
+      const lambdaMessage = JSON.parse(snsMessage.Message) as ReaderLambdaMessage;
+      const requestId = lambdaMessage.requestContext.requestId;
+      const observations = lambdaMessage.responsePayload;
 
       const wundergroundObservations = await submitToWunderground(
         WUNDERGROUND_ID,
@@ -30,6 +38,9 @@ export async function handler(event: SQSEvent) {
           observations,
           wundergroundObservations,
           stationId: WUNDERGROUND_ID,
+          sqsMessageId,
+          snsMessageId,
+          requestId,
         })
       );
     })
