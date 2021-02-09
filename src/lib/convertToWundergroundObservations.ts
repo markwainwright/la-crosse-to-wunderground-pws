@@ -9,16 +9,33 @@ import { Observations, WundergroundObservations } from './types';
 export default function convertLaCrosseToWundergroundObservations(
   observations: Observations
 ): WundergroundObservations {
+  // See https://support.weather.com/s/article/PWS-Upload-Protocol
   return {
-    tempf: celsiusToFahrenheit(observations.outdoor.temperature),
-    humidity: observations.outdoor.humidity * 100,
-    winddir: observations.outdoor.windDirection,
-    windspeedmph: kilometersToMiles(observations.outdoor.windSpeed),
-    windgustmph: kilometersToMiles(observations.outdoor.windGust),
-    rainin: millimetersToInches(observations.outdoor.rainHour),
-    dailyrainin: millimetersToInches(observations.outdoor.rainDay),
-    baromin: hPaToInHg(observations.outdoor.pressure),
-    dewptf: celsiusToFahrenheit(observations.outdoor.dewPoint),
     dateutc: observations.timestamp.substring(0, 19).replace('T', ' '),
+
+    ...(observations.temperature !== null
+      ? { tempf: celsiusToFahrenheit(observations.temperature) }
+      : {}),
+    ...(observations.dewPoint !== null
+      ? { dewptf: celsiusToFahrenheit(observations.dewPoint) }
+      : {}),
+    ...(observations.humidity !== null ? { humidity: observations.humidity * 100 } : {}),
+
+    ...(observations.pressure !== null ? { baromin: hPaToInHg(observations.pressure) } : {}),
+
+    ...(observations.rain
+      ? {
+          rainin: millimetersToInches(observations.rain.hour),
+          dailyrainin: millimetersToInches(observations.rain.day),
+        }
+      : {}),
+
+    ...(observations.wind
+      ? {
+          winddir: observations.wind.direction,
+          windspeedmph: kilometersToMiles(observations.wind.speed),
+          windgustmph: kilometersToMiles(observations.wind.gust),
+        }
+      : {}),
   };
 }
