@@ -1,7 +1,7 @@
 import convertLaCrosseObservations from '../src/lib/convertLaCrosseObservations';
 
 describe('convertLaCrosseObservations', () => {
-  test('should correctly map La Crosse to Observations shape', () => {
+  it('should correctly map La Crosse to Observations shape', () => {
     const laCrosseObservations = {
       Device_id: '7FFF64F0F12828B9',
       model: 'WS2816',
@@ -34,19 +34,23 @@ describe('convertLaCrosseObservations', () => {
         humidity: 0.62,
         temperature: 23.2,
       },
-      outdoor: {
-        dewPoint: 8.3,
-        humidity: 0.67,
-        pressure: 997,
-        rainDay: 17.5,
-        rainHour: 0,
-        rainWeek: 30.5,
-        temperature: 14.4,
-        windDirection: 112.5,
-        windGust: 0,
-        windSpeed: 0,
+      dewPoint: 8.3,
+      humidity: 0.67,
+      pressure: 997,
+      rain: {
+        day: 17.5,
+        hour: 0,
+        week: 30.5,
+      },
+      temperature: 14.4,
+      wind: {
+        direction: 112.5,
+        gust: 0,
+        speed: 0,
       },
       timestamp: '2018-07-13T19:50:18.000Z',
     });
   });
+
+  // TODO: test process.env.*_ENABLED vars
 });
