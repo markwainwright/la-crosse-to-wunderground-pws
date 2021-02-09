@@ -27,33 +27,44 @@ export interface LaCrosseObservations {
 
 export interface Observations {
   timestamp: string;
-  outdoor: {
-    dewPoint: number;
-    humidity: number;
-    pressure: number;
-    rainDay: number;
-    rainHour: number;
-    rainWeek: number;
-    temperature: number;
-    windDirection: number;
-    windGust: number;
-    windSpeed: number;
-  };
+
+  temperature: number | null;
+  dewPoint: number | null;
+  humidity: number | null;
+
+  pressure: number | null;
+
+  rain: {
+    day: number;
+    hour: number;
+    week: number;
+  } | null;
+
+  wind: {
+    direction: number;
+    gust: number;
+    speed: number;
+  } | null;
+
   indoor: {
     temperature: number;
     humidity: number;
-  };
+  } | null;
 }
 
 export interface WundergroundObservations {
-  tempf: number;
-  humidity: number;
-  winddir: number;
-  windspeedmph: number;
-  windgustmph: number;
-  rainin: number;
-  dailyrainin: number;
-  baromin: number;
-  dewptf: number;
   dateutc?: string;
+
+  tempf?: number;
+  dewptf?: number;
+  humidity?: number;
+
+  baromin?: number;
+
+  rainin?: number;
+  dailyrainin?: number;
+
+  winddir?: number;
+  windspeedmph?: number;
+  windgustmph?: number;
 }

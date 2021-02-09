@@ -19,6 +19,12 @@ functions:
     handler: src/reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
+      THERMO_HYGRO_ENABLED: 1
+      PRESSURE_ENABLED: 1
+      RAIN_ENABLED: 0
+      WIND_ENABLED: 1
+      INDOOR_THERMO_HYGRO_ENABLED: 1
+
     description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
     events:
       - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
