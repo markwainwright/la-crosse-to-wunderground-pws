@@ -27,7 +27,11 @@ functions:
 
     description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
     events:
-      - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
+      - schedule:
+          rate: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
+          input:
+            count: 1
+
     iamRoleStatements:
       - Effect: Allow
         Action: sns:Publish

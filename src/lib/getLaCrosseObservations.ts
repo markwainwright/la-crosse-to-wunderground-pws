@@ -1,19 +1,19 @@
 import https from 'https';
 import axios from 'axios';
 
-import { LaCrosseObservations } from './types';
+import { LaCrosseObservation } from './types';
 
 interface LaCrosseResponse {
   device0: {
     success: boolean;
-    obs: LaCrosseObservations[];
+    obs: LaCrosseObservation[];
   };
   device_id: string;
 }
 
-export default async function getLaCrosseObservations(deviceId: string) {
+export default async function getLaCrosseObservations(deviceId: string, count: number) {
   const { data } = await axios.get<LaCrosseResponse | string>(
-    `https://lacrossealertsmobile.com/laxservices/device_info.php?deviceid=${deviceId}`,
+    `https://lacrossealertsmobile.com/laxservices/device_info.php?deviceid=${deviceId}&limit=${count}&metric=1`,
     { httpsAgent: new https.Agent({ rejectUnauthorized: false }) } // :(
   );
 
@@ -21,5 +21,5 @@ export default async function getLaCrosseObservations(deviceId: string) {
     throw new Error(`Unknown La Crosse response: ${data}`);
   }
 
-  return data.device0.obs[0];
+  return data.device0.obs;
 }
