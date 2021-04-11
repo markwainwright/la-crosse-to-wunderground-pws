@@ -136,6 +136,26 @@ resources:
         OKActions:
           - !Ref AlarmTopic
 
+    WriterErrorAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        Namespace: AWS/Lambda
+        AlarmDescription: Reader errors has hit threshold
+        Dimensions:
+          - Name: FunctionName
+            Value: !Ref WriterLambdaFunction
+        MetricName: Errors
+        ComparisonOperator: GreaterThanThreshold
+        Statistic: Sum
+        Unit: Count
+        Threshold: 3
+        Period: 1200 # 20 mins
+        EvaluationPeriods: 2
+        AlarmActions:
+          - !Ref AlarmTopic
+        OKActions:
+          - !Ref AlarmTopic
+
     QueueMessagesAlarm:
       Type: AWS::CloudWatch::Alarm
       Properties:
