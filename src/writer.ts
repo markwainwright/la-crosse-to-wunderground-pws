@@ -1,5 +1,6 @@
 import { SNSMessage, SQSEvent } from 'aws-lambda';
 
+import convertToWundergroundObservations from './lib/convertToWundergroundObservation';
 import submitToWunderground from './lib/submitToWunderground';
 import { ReaderLambdaMessage } from './lib/types';
 
@@ -17,7 +18,7 @@ export async function handler(event: SQSEvent) {
   const sqsRecords = event.Records;
 
   await Promise.all(
-    sqsRecords.map(async (record) => {
+    sqsRecords.map(async record => {
       const sqsMessageId = record.messageId;
 
       const snsMessage = JSON.parse(record.body) as SNSMessage;
@@ -26,12 +27,11 @@ export async function handler(event: SQSEvent) {
       const lambdaMessage = JSON.parse(snsMessage.Message) as ReaderLambdaMessage;
       const requestId = lambdaMessage.requestContext.requestId;
       const observations = lambdaMessage.responsePayload;
+      const wundergroundObservations = observations.map(convertToWundergroundObservations);
 
-      const wundergroundObservations = await submitToWunderground(
-        WUNDERGROUND_ID,
-        WUNDERGROUND_PWD,
-        observations
-      );
+      for (const wundergroundObservation of wundergroundObservations) {
+        await submitToWunderground(WUNDERGROUND_ID, WUNDERGROUND_PWD, wundergroundObservation);
+      }
 
       console.log(
         JSON.stringify({

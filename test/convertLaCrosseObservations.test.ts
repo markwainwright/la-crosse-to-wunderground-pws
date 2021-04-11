@@ -1,54 +1,54 @@
-import convertLaCrosseObservations from '../src/lib/convertLaCrosseObservations';
+import convertLaCrosseObservation from '../src/lib/convertLaCrosseObservation';
 
-describe('convertLaCrosseObservations', () => {
+describe(convertLaCrosseObservation, () => {
   it('should correctly map La Crosse to Observations shape', () => {
     const laCrosseObservations = {
-      Device_id: '7FFF64F0F12828B9',
-      model: 'WS2816',
-      TimeStamp: '1495268534',
-      Icon: '1',
+      Device_id: '0ABC12E3F45678G9',
+      model: 'AB1234',
+      TimeStamp: '1618200243',
+      Icon: '2',
       StormAlarm: '0',
-      IndoorTemp: 73.8,
-      IndoorHumid: '62',
-      OutdoorTemp: 57.9,
-      OutdoorHumid: '67',
-      DewPoint: 47,
+      IndoorTemp: '18.9',
+      IndoorHumid: '55',
+      OutdoorTemp: '9.9',
+      OutdoorHumid: '54',
+      DewPoint: '1.02',
       WindDir: 'ESE',
-      WindVelocity: 0,
-      GustVelocity: 0,
-      Rain1hr: 0,
-      Rain24hr: 0.69,
-      RainWeek: 1.2,
-      RainMonth: 3.99,
-      RainTotal: 139.63,
-      Pressure: 29.44,
-      Tendency: '2',
+      WindVelocity: 0.5,
+      GustVelocity: 2,
+      Rain1hr: '0.0',
+      Rain24hr: '17.5',
+      RainWeek: '30.5',
+      RainMonth: '0.0',
+      RainTotal: '0.0',
+      Pressure: '1022.8',
+      Tendency: '1',
       success: 9,
-      FeelsLike: 57.9,
+      FeelsLike: '9.9',
       timestamp: null,
-      utctime: 1531511418,
+      utctime: 1618200243,
     };
 
-    expect(convertLaCrosseObservations(laCrosseObservations)).toEqual({
+    expect(convertLaCrosseObservation(laCrosseObservations)).toEqual({
       indoor: {
-        humidity: 0.62,
-        temperature: 23.2,
+        humidity: 0.55,
+        temperature: 18.9,
       },
-      dewPoint: 8.3,
-      humidity: 0.67,
-      pressure: 997,
+      dewPoint: 1.02,
+      humidity: 0.54,
+      pressure: 1022.8,
       rain: {
         day: 17.5,
         hour: 0,
         week: 30.5,
       },
-      temperature: 14.4,
+      temperature: 9.9,
       wind: {
         direction: 112.5,
-        gust: 0,
-        speed: 0,
+        speed: 0.5,
+        gust: 2,
       },
-      timestamp: '2018-07-13T19:50:18.000Z',
+      timestamp: '2021-04-12T04:04:03.000Z',
     });
   });
 

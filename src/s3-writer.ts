@@ -13,19 +13,22 @@ export async function handler(event: SNSEvent) {
   const snsRecords = event.Records;
 
   await Promise.all(
-    snsRecords.map(async (snsRecord) => {
+    snsRecords.map(async snsRecord => {
       const snsMessageId = snsRecord.Sns.MessageId;
 
       const lambdaMessage = JSON.parse(snsRecord.Sns.Message) as ReaderLambdaMessage;
       const requestId = lambdaMessage.requestContext.requestId;
       const observations = lambdaMessage.responsePayload;
 
-      const s3Url = await writeToS3(S3_BUCKET_NAME, observations);
+      const s3Urls = [];
+      for (const observation of observations) {
+        s3Urls.push(await writeToS3(S3_BUCKET_NAME, observation));
+      }
 
       console.log(
         JSON.stringify({
           observations,
-          s3Url,
+          s3Urls,
           snsMessageId,
           requestId,
         })
