@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "serverless package",
-    "deploy": "serverless deploy",
+    "deploy": "npm test && serverless deploy",
     "invoke": "serverless invoke -f reader",
     "invoke-local": "serverless invoke local -f reader",
     "test": "jest"
