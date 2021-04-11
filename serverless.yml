@@ -7,7 +7,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   region: us-west-2
   stage: production
   timeout: 5
@@ -19,8 +19,7 @@ functions:
     handler: src/reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
-    description:
-      Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
+    description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
     events:
       - schedule: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
     iamRoleStatements:
@@ -33,8 +32,7 @@ functions:
     environment:
       WUNDERGROUND_ID: ${env:WUNDERGROUND_ID}
       WUNDERGROUND_PWD: ${env:WUNDERGROUND_PWD}
-    description:
-      Receives weather observations from an SQS queue and submits them to Weather Underground PWS
+    description: Receives weather observations from an SQS queue and submits them to Weather Underground PWS
     events:
       - sqs:
           arn: !GetAtt Queue.Arn

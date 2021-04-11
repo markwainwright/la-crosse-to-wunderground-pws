@@ -9,27 +9,28 @@
     "url": "git+https://github.com/markwainwright/la-crosse-to-wunderground-pws.git"
   },
   "scripts": {
+    "build": "serverless package",
     "deploy": "serverless deploy",
     "invoke": "serverless invoke -f reader",
-    "start": "ts-node run.ts",
+    "invoke-local": "serverless invoke local -f reader",
     "test": "jest"
   },
   "dependencies": {
-    "axios": "^0.19.1",
+    "axios": "^0.21.1",
     "windrose": "2.1.0"
   },
   "devDependencies": {
-    "@types/aws-lambda": "^8.10.39",
-    "@types/jest": "^24.0.25",
-    "@types/node": "^13.1.6",
-    "aws-sdk": "2.601.0",
-    "jest": "^24.9.0",
-    "serverless": "^1.60.5",
-    "serverless-iam-roles-per-function": "^2.0.2",
+    "@types/aws-lambda": "^8.10.75",
+    "@types/jest": "^26.0.22",
+    "@types/node": "^14.14.37",
+    "aws-sdk": "2.804.0",
+    "jest": "^26.6.3",
+    "serverless": "^2.35.0",
+    "serverless-iam-roles-per-function": "^3.1.0",
     "serverless-plugin-typescript": "^1.1.9",
     "serverless-pseudo-parameters": "^2.5.0",
-    "ts-jest": "^24.3.0",
-    "ts-node": "^8.6.1",
-    "typescript": "^3.7.4"
+    "ts-jest": "^26.5.4",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
   }
 }
