@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-import { Observations, WundergroundObservations } from './types';
-import convertToWundergroundObservations from './convertToWundergroundObservations';
+import { WundergroundObservation } from './types';
 
-interface WundergroundParams extends WundergroundObservations {
+interface WundergroundParams extends WundergroundObservation {
   dateutc: string;
   action: 'updateraw';
   ID: string;
@@ -13,13 +12,12 @@ interface WundergroundParams extends WundergroundObservations {
 export default async function submitToWunderground(
   stationId: string,
   password: string,
-  observations: Observations
+  wundergroundObservation: WundergroundObservation
 ) {
   // See https://support.weather.com/s/article/PWS-Upload-Protocol
-  const wundergroundObservations = convertToWundergroundObservations(observations);
   const params: WundergroundParams = {
     dateutc: 'now',
-    ...wundergroundObservations,
+    ...wundergroundObservation,
     action: 'updateraw',
     ID: stationId,
     PASSWORD: password,
@@ -33,6 +31,4 @@ export default async function submitToWunderground(
   if (data.trim() !== 'success') {
     throw new Error(`Unknown Wunderground response: ${data}`);
   }
-
-  return wundergroundObservations;
 }

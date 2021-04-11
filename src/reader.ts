@@ -1,18 +1,27 @@
 import { Context, EventBridgeEvent } from 'aws-lambda';
 
 import getLaCrosseObservations from './lib/getLaCrosseObservations';
-import convertLaCrosseObservations from './lib/convertLaCrosseObservations';
+import convertLaCrosseObservation from './lib/convertLaCrosseObservation';
 
 const { LA_CROSSE_DEVICE_ID } = process.env;
 
-export async function handler(event: EventBridgeEvent<'Scheduled Event', {}>, context: Context) {
+interface Event extends EventBridgeEvent<'Scheduled Event', {}> {
+  count: number;
+}
+
+export async function handler(event: Event, context: Context) {
   if (!LA_CROSSE_DEVICE_ID) {
     throw new Error('No LA_CROSSE_DEVICE_ID defined');
   }
 
-  const laCrosseObservations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID);
+  const { count } = event;
 
-  const observations = convertLaCrosseObservations(laCrosseObservations);
+  if (typeof count !== 'number' || count < 1) {
+    throw new Error(`Invalid 'count': ${count}`);
+  }
+
+  const laCrosseObservations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID, count);
+  const observations = laCrosseObservations.map(convertLaCrosseObservation);
 
   console.log(
     JSON.stringify({
@@ -20,7 +29,6 @@ export async function handler(event: EventBridgeEvent<'Scheduled Event', {}>, co
       observations,
       deviceId: LA_CROSSE_DEVICE_ID,
       requestId: context.awsRequestId,
-      eventId: event.id,
     })
   );
 

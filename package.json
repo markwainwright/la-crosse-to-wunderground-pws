@@ -11,8 +11,8 @@
   "scripts": {
     "build": "serverless package",
     "deploy": "npm test && serverless deploy",
-    "invoke": "serverless invoke -f reader",
-    "invoke-local": "serverless invoke local -f reader",
+    "invoke": "serverless invoke -f reader -t Event -d '{\"count\": 1}'",
+    "invoke-local": "serverless invoke local -f reader -d '{\"count\": 3}'",
     "test": "jest"
   },
   "dependencies": {
