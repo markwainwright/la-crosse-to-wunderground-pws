@@ -1,3 +1,4 @@
+import https from 'https';
 import axios from 'axios';
 
 import { LaCrosseObservations } from './types';
@@ -12,7 +13,8 @@ interface LaCrosseResponse {
 
 export default async function getLaCrosseObservations(deviceId: string) {
   const { data } = await axios.get<LaCrosseResponse | string>(
-    `http://lacrossealertsmobile.com/laxservices/device_info.php?deviceid=${deviceId}`
+    `https://lacrossealertsmobile.com/laxservices/device_info.php?deviceid=${deviceId}`,
+    { httpsAgent: new https.Agent({ rejectUnauthorized: false }) } // :(
   );
 
   if (typeof data !== 'object') {
