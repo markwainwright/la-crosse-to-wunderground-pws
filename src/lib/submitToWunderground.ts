@@ -2,6 +2,10 @@ import axios from 'axios';
 
 import { WundergroundObservation } from './types';
 
+enum Status {
+  Submitted = 'Submitted',
+}
+
 interface WundergroundParams extends WundergroundObservation {
   dateutc: string;
   action: 'updateraw';
@@ -31,4 +35,6 @@ export default async function submitToWunderground(
   if (data.trim() !== 'success') {
     throw new Error(`Unknown Wunderground response: ${data}`);
   }
+
+  return Status.Submitted;
 }

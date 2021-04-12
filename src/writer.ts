@@ -1,8 +1,8 @@
-import { SNSMessage, SQSEvent } from 'aws-lambda';
+import { S3Event, SQSEvent } from 'aws-lambda';
 
 import convertToWundergroundObservations from './lib/convertToWundergroundObservation';
 import submitToWunderground from './lib/submitToWunderground';
-import { ReaderLambdaMessage } from './lib/types';
+import { readFromS3 } from './lib/s3';
 
 const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
 
@@ -15,34 +15,33 @@ export async function handler(event: SQSEvent) {
     throw new Error('No WUNDERGROUND_PWD defined');
   }
 
-  const sqsRecords = event.Records;
+  for (const sqsRecord of event.Records) {
+    const sqsMessageId = sqsRecord.messageId;
+    const s3Message = JSON.parse(sqsRecord.body) as S3Event;
 
-  await Promise.all(
-    sqsRecords.map(async record => {
-      const sqsMessageId = record.messageId;
+    for (const s3Record of s3Message.Records) {
+      const { observation, correlationId } = await readFromS3(
+        s3Record.s3.bucket.name,
+        decodeURIComponent(s3Record.s3.object.key),
+        s3Record.s3.object.eTag
+      );
+      const wundergroundObservation = convertToWundergroundObservations(observation);
 
-      const snsMessage = JSON.parse(record.body) as SNSMessage;
-      const snsMessageId = snsMessage.MessageId;
-
-      const lambdaMessage = JSON.parse(snsMessage.Message) as ReaderLambdaMessage;
-      const requestId = lambdaMessage.requestContext.requestId;
-      const observations = lambdaMessage.responsePayload;
-      const wundergroundObservations = observations.map(convertToWundergroundObservations);
-
-      for (const wundergroundObservation of wundergroundObservations) {
-        await submitToWunderground(WUNDERGROUND_ID, WUNDERGROUND_PWD, wundergroundObservation);
-      }
+      const status = await submitToWunderground(
+        WUNDERGROUND_ID,
+        WUNDERGROUND_PWD,
+        wundergroundObservation
+      );
 
       console.log(
         JSON.stringify({
-          observations,
-          wundergroundObservations,
-          stationId: WUNDERGROUND_ID,
+          correlationId,
           sqsMessageId,
-          snsMessageId,
-          requestId,
+          stationId: WUNDERGROUND_ID,
+          timestamp: observation.timestamp,
+          status,
         })
       );
-    })
-  );
+    }
+  }
 }
