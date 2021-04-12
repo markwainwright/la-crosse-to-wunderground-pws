@@ -10,7 +10,7 @@ provider:
   runtime: nodejs14.x
   region: us-west-2
   stage: production
-  timeout: 5
+  timeout: 20
   memorySize: 1024
   versionFunctions: false
 
