@@ -19,83 +19,63 @@ functions:
     handler: src/reader.handler
     environment:
       LA_CROSSE_DEVICE_ID: ${env:LA_CROSSE_DEVICE_ID}
+      S3_BUCKET_NAME: !Ref ObservationsBucket
       THERMO_HYGRO_ENABLED: 1
       PRESSURE_ENABLED: 1
       RAIN_ENABLED: 0
       WIND_ENABLED: 1
       INDOOR_THERMO_HYGRO_ENABLED: 1
-
-    description: Fetches weather observations from La Crosse Alerts Mobile and sends them to an SNS topic
+    description: Fetches weather observations from La Crosse Alerts Mobile and writes them to S3
     events:
       - schedule:
-          rate: rate(15 minutes) # La Crosse publishes a new observation every ~16 mins
+          rate: rate(15 minutes) # La Crosse usually publishes a new observation every 7-17 mins
           input:
-            count: 1
-
+            count: 3
     iamRoleStatements:
       - Effect: Allow
-        Action: sns:Publish
-        Resource: !Ref Topic
+        Action: s3:ListBucket
+        Resource: !GetAtt ObservationsBucket.Arn
+      - Effect: Allow
+        Action:
+          - s3:GetObject
+          - s3:PutObject
+        Resource: !Sub '${ObservationsBucket.Arn}/*'
 
   writer:
     handler: src/writer.handler
     environment:
       WUNDERGROUND_ID: ${env:WUNDERGROUND_ID}
       WUNDERGROUND_PWD: ${env:WUNDERGROUND_PWD}
-    description: Receives weather observations from an SQS queue and submits them to Weather Underground PWS
+    description: Subscribes to queue of S3 writes, fetches observation from S3, and submits it Weather Underground PWS
     events:
       - sqs:
           arn: !GetAtt Queue.Arn
           batchSize: 1
-    iamRoleStatements: []
-
-  s3Writer:
-    handler: src/s3-writer.handler
-    environment:
-      S3_BUCKET_NAME: !Ref ObservationsBucket
-    description: Receives weather observations from an SNS topic and saves them to an S3 bucket
-    events:
-      - sns:
-          arn: !Ref Topic
-          topicName: ObservationsTopic
     iamRoleStatements:
       - Effect: Allow
-        Action: s3:PutObject
-        Resource: !Join
-          - '/'
-          - - !GetAtt ObservationsBucket.Arn
-            - '*'
+        Action: s3:ListBucket
+        Resource: !GetAtt ObservationsBucket.Arn
+      - Effect: Allow
+        Action: s3:GetObject
+        Resource: !Sub '${ObservationsBucket.Arn}/*'
 
 resources:
   Resources:
     ObservationsBucket:
       Type: AWS::S3::Bucket
+      DependsOn:
+        - QueuePolicy
       Properties:
-        BucketName: !Join
-          - '-'
-          - - !Ref AWS::StackName
-            - 'observations'
+        BucketName: !Sub '${AWS::StackName}-observations'
         PublicAccessBlockConfiguration:
           BlockPublicAcls: true
           BlockPublicPolicy: true
           IgnorePublicAcls: true
           RestrictPublicBuckets: true
-
-    ReaderLambdaEventInvokeConfig:
-      Type: AWS::Lambda::EventInvokeConfig
-      Properties:
-        FunctionName: !Ref ReaderLambdaFunction
-        Qualifier: $LATEST
-        DestinationConfig:
-          OnSuccess:
-            Destination: !Ref Topic
-
-    Topic:
-      Type: AWS::SNS::Topic
-      Properties:
-        Subscription:
-          - Endpoint: !GetAtt Queue.Arn
-            Protocol: sqs
+        NotificationConfiguration:
+          QueueConfigurations:
+            - Event: s3:ObjectCreated:Put
+              Queue: !GetAtt Queue.Arn
 
     Queue:
       Type: AWS::SQS::Queue
@@ -116,8 +96,10 @@ resources:
               Principal:
                 AWS: '*'
               Condition:
-                ArnEquals:
-                  aws:SourceArn: !Ref Topic
+                ArnLike:
+                  aws:SourceArn: !Sub 'arn:aws:s3:*:*:${AWS::StackName}-observations'
+                StringEquals:
+                  aws:SourceAccount: !Ref AWS::AccountId
 
     AlarmTopic:
       Type: AWS::SNS::Topic
@@ -220,10 +202,7 @@ resources:
                   Action: s3:*
                   Resource:
                     - !GetAtt ServerlessDeploymentBucket.Arn
-                    - !Join
-                      - '/'
-                      - - !GetAtt ServerlessDeploymentBucket.Arn
-                        - '*'
+                    - !Sub '${ServerlessDeploymentBucket.Arn}/*'
 
                 - Effect: Allow
                   Action: lambda:*
@@ -242,7 +221,6 @@ resources:
                   Resource:
                     - !GetAtt ReaderIamRoleLambdaExecution.Arn
                     - !GetAtt WriterIamRoleLambdaExecution.Arn
-                    - !GetAtt S3WriterIamRoleLambdaExecution.Arn
 
     CDUserAccessKey:
       Type: AWS::IAM::AccessKey

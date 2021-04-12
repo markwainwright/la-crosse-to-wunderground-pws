@@ -112,17 +112,3 @@ export interface WundergroundObservation {
   /** miles/hr */
   windgustmph?: number;
 }
-
-export interface ReaderLambdaMessage {
-  version: string;
-  timestamp: string;
-  requestContext: {
-    requestId: string;
-    functionArn: string;
-    condition: 'Success';
-    approximateInvokeCount: number;
-  };
-  requestPayload: {};
-  responseContext: { statusCode: number; executedVersion: string };
-  responsePayload: Observation[];
-}
