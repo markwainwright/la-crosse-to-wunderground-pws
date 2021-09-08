@@ -28,4 +28,8 @@ then
   aws s3 cp $THIS_DIR/dist/function.zip s3://$bucket/$writer_key
 fi
 
-FUNCTION_CODE_SHA=$code_sha iidy create-or-update $THIS_DIR/infrastructure/stack-args.yml --stack-name $APP_NAME --region $REGION
+FUNCTION_CODE_SHA=$code_sha \
+  iidy create-or-update $THIS_DIR/infrastructure/stack-args.yml \
+    --stack-name $APP_NAME \
+    --region $REGION \
+    --environment production
