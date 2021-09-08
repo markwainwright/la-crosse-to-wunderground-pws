@@ -34,6 +34,7 @@ export async function writeToS3(
           Bucket: bucketName,
           Key: key,
           Body: JSON.stringify(observation),
+          StorageClass: 'ONEZONE_IA',
           Metadata: {
             [CORRELATION_ID_METADATA_KEY]: correlationId,
           },
