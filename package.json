@@ -6,7 +6,7 @@
   "scripts": {
     "build": "./build.sh",
     "deploy": "./deploy.sh",
-    "invoke": "# TODO: --data '{\"count\": 3}'",
+    "invoke": "aws lambda invoke --function-name la-crosse-to-wunderground-reader --region us-east-1 --payload '{\"count\": 3}' --cli-binary-format raw-in-base64-out $(tty)",
     "test": "jest"
   },
   "keywords": [],
