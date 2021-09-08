@@ -25,11 +25,11 @@ Resources:
           {
             "LA_CROSSE_DEVICE_ID": "${LaCrosseDeviceId}",
             "S3_BUCKET_NAME": "${ObservationsBucket}",
-            "THERMO_HYGRO_ENABLED": 1,
-            "PRESSURE_ENABLED": 1,
-            "RAIN_ENABLED": 0,
-            "WIND_ENABLED": 1,
-            "INDOOR_THERMO_HYGRO_ENABLED": 1
+            "THERMO_HYGRO_ENABLED": true,
+            "PRESSURE_ENABLED": true,
+            "RAIN_ENABLED": false,
+            "WIND_ENABLED": true,
+            "INDOOR_THERMO_HYGRO_ENABLED": true
           }
         FunctionCodeSha: !Ref FunctionCodeSha
         FunctionHandler: reader.handler
@@ -48,7 +48,7 @@ Resources:
         EnvironmentVariablesJson: !Sub |
           {
             "WUNDERGROUND_ID": "${WundergroundId}",
-            "WUNDERGROUND_PWD": "${WundergroundPassword}",
+            "WUNDERGROUND_PWD": "${WundergroundPassword}"
           }
         FunctionCodeSha: !Ref FunctionCodeSha
         FunctionHandler: writer.handler

@@ -13,11 +13,11 @@ const vars = JSON.parse(process.env.JSON_VARS!);
 const { LA_CROSSE_DEVICE_ID, S3_BUCKET_NAME } = vars;
 
 const options = {
-  thermoHygroEnabled: vars.THERMO_HYGRO_ENABLED === '1',
-  pressureEnabled: vars.PRESSURE_ENABLED === '1',
-  rainEnabled: vars.RAIN_ENABLED === '1',
-  windEnabled: vars.WIND_ENABLED === '1',
-  indoorThermoHygroEnabled: vars.INDOOR_THERMO_HYGRO_ENABLED === '1',
+  thermoHygroEnabled: vars.THERMO_HYGRO_ENABLED,
+  pressureEnabled: vars.PRESSURE_ENABLED,
+  rainEnabled: vars.RAIN_ENABLED,
+  windEnabled: vars.WIND_ENABLED,
+  indoorThermoHygroEnabled: vars.INDOOR_THERMO_HYGRO_ENABLED,
 };
 
 export const handler: FunctionHandler = async (event, context) => {
