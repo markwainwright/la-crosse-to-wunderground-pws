@@ -1,0 +1,1 @@
+../lambda-starter/shell/lambda/build.sh

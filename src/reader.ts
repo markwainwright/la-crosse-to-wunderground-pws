@@ -1,16 +1,26 @@
-import { Context, EventBridgeEvent } from 'aws-lambda';
+import { Handler } from 'aws-lambda';
 
-import getLaCrosseObservations from './lib/getLaCrosseObservations';
 import convertLaCrosseObservation from './lib/convertLaCrosseObservation';
+import getLaCrosseObservations from './lib/getLaCrosseObservations';
 import { writeToS3 } from './lib/s3';
 
-const { LA_CROSSE_DEVICE_ID, S3_BUCKET_NAME } = process.env;
-
-interface Event extends EventBridgeEvent<'Scheduled Event', {}> {
+interface FunctionPayload {
   count: number;
 }
+type FunctionHandler = Handler<FunctionPayload, void>;
 
-export async function handler(event: Event, context: Context) {
+const vars = JSON.parse(process.env.JSON_VARS!);
+const { LA_CROSSE_DEVICE_ID, S3_BUCKET_NAME } = vars;
+
+const options = {
+  thermoHygroEnabled: vars.THERMO_HYGRO_ENABLED === '1',
+  pressureEnabled: vars.PRESSURE_ENABLED === '1',
+  rainEnabled: vars.RAIN_ENABLED === '1',
+  windEnabled: vars.WIND_ENABLED === '1',
+  indoorThermoHygroEnabled: vars.INDOOR_THERMO_HYGRO_ENABLED === '1',
+};
+
+export const handler: FunctionHandler = async (event, context) => {
   if (!LA_CROSSE_DEVICE_ID) {
     throw new Error('No LA_CROSSE_DEVICE_ID defined');
   }
@@ -27,7 +37,7 @@ export async function handler(event: Event, context: Context) {
   const correlationId = context.awsRequestId;
 
   const laCrosseObservations = await getLaCrosseObservations(LA_CROSSE_DEVICE_ID, count);
-  const observations = laCrosseObservations.map(convertLaCrosseObservation);
+  const observations = laCrosseObservations.map(obs => convertLaCrosseObservation(options, obs));
 
   for (const observation of observations) {
     const status = await writeToS3(S3_BUCKET_NAME, observation, correlationId);
@@ -41,4 +51,4 @@ export async function handler(event: Event, context: Context) {
       })
     );
   }
-}
+};

@@ -2,6 +2,14 @@ import convertLaCrosseObservation from '../src/lib/convertLaCrosseObservation';
 
 describe(convertLaCrosseObservation, () => {
   it('should correctly map La Crosse to Observations shape', () => {
+    const options = {
+      thermoHygroEnabled: true,
+      pressureEnabled: true,
+      rainEnabled: true,
+      windEnabled: true,
+      indoorThermoHygroEnabled: true,
+    };
+
     const laCrosseObservations = {
       Device_id: '0ABC12E3F45678G9',
       model: 'AB1234',
@@ -29,7 +37,7 @@ describe(convertLaCrosseObservation, () => {
       utctime: 1618200243,
     };
 
-    expect(convertLaCrosseObservation(laCrosseObservations)).toEqual({
+    expect(convertLaCrosseObservation(options, laCrosseObservations)).toEqual({
       indoor: {
         humidity: 0.55,
         temperature: 18.9,
@@ -52,5 +60,5 @@ describe(convertLaCrosseObservation, () => {
     });
   });
 
-  // TODO: test process.env.*_ENABLED vars
+  // TODO: test options false values
 });

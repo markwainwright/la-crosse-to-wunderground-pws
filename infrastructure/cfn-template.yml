@@ -1,0 +1,100 @@
+Parameters:
+  FunctionCodeSha:
+    Type: String
+
+  LaCrosseDeviceId:
+    Type: String
+
+  WundergroundId:
+    Type: String
+
+  WundergroundPassword:
+    Type: String
+
+  AlarmEmail:
+    Type: String
+
+Resources:
+  Reader:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/schedule.yml
+      Parameters:
+        # Description: Fetches weather observations from La Crosse Alerts Mobile and writes them to S3
+        EnvironmentVariablesJson: !Sub |
+          {
+            "LA_CROSSE_DEVICE_ID": "${LaCrosseDeviceId}",
+            "S3_BUCKET_NAME": "${ObservationsBucket}",
+            "THERMO_HYGRO_ENABLED": 1,
+            "PRESSURE_ENABLED": 1,
+            "RAIN_ENABLED": 0,
+            "WIND_ENABLED": 1,
+            "INDOOR_THERMO_HYGRO_ENABLED": 1
+          }
+        FunctionCodeSha: !Ref FunctionCodeSha
+        FunctionHandler: reader.handler
+        FunctionMemorySize: 1024
+        FunctionTimeoutSecs: 20
+        FunctionPayload: '{"count": 3}'
+        Name: !Sub ${AWS::StackName}-reader
+        ScheduleExpression: rate(15 minutes) # La Crosse usually publishes a new observation every 7-17 mins
+
+  Writer:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/queue.yml
+      Parameters:
+        # Description: Subscribes to queue of S3 writes, fetches observation from S3, and submits it Weather Underground PWS
+        EnvironmentVariablesJson: !Sub |
+          {
+            "WUNDERGROUND_ID": "${WundergroundId}",
+            "WUNDERGROUND_PWD": "${WundergroundPassword}",
+          }
+        FunctionCodeSha: !Ref FunctionCodeSha
+        FunctionHandler: writer.handler
+        FunctionMemorySize: 1024
+        FunctionTimeoutSecs: 20
+        Name: !Sub ${AWS::StackName}-writer
+        MessageSourceArn: !Sub arn:aws:s3:*:*:${AWS::StackName}-observations
+
+  ObservationsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}-observations
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:Put
+            Queue: !GetAtt Writer.Outputs.QueueArn
+
+  S3ReadPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !GetAtt Reader.Outputs.FunctionRoleName
+        - !GetAtt Writer.Outputs.FunctionRoleName
+      PolicyName: s3-read
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: s3:ListBucket
+            Resource: !GetAtt ObservationsBucket.Arn
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub '${ObservationsBucket.Arn}/*'
+
+  S3WritePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !GetAtt Reader.Outputs.FunctionRoleName
+      PolicyName: s3-write
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: s3:PutObject
+            Resource: !Sub '${ObservationsBucket.Arn}/*'

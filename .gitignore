@@ -1,4 +1,2 @@
-node_modules
-.serverless
-.build
 dist
+node_modules

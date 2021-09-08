@@ -1,0 +1,18 @@
+$imports:
+  AlarmEmail: env:ALARM_EMAIL
+  FunctionCodeSha: env:FUNCTION_CODE_SHA
+  LaCrosseDeviceId: env:LA_CROSSE_DEVICE_ID
+  WundergroundId: env:WUNDERGROUND_ID
+  WundergroundPassword: env:WUNDERGROUND_PWD
+
+Template: ./cfn-template.yml
+OnFailure: DELETE
+Capabilities:
+  - CAPABILITY_NAMED_IAM
+
+Parameters:
+  AlarmEmail: '{{ AlarmEmail }}'
+  FunctionCodeSha: '{{ FunctionCodeSha }}'
+  LaCrosseDeviceId: '{{ LaCrosseDeviceId }}'
+  WundergroundId: '{{ WundergroundId }}'
+  WundergroundPassword: '{{ WundergroundPassword }}'

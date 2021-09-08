@@ -28,7 +28,7 @@ export async function writeToS3(
 
     return Status.AlreadyUploaded;
   } catch (error) {
-    if (error.code === 'NotFound') {
+    if ((error as any).code === 'NotFound') {
       await s3
         .putObject({
           Bucket: bucketName,

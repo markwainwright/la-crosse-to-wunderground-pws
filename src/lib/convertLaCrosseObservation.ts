@@ -1,6 +1,13 @@
-import { Observation, LaCrosseObservation } from './types';
-
 import { compassToDegrees } from './conversions';
+import { LaCrosseObservation, Observation } from './types';
+
+interface Options {
+  thermoHygroEnabled: boolean;
+  pressureEnabled: boolean;
+  rainEnabled: boolean;
+  windEnabled: boolean;
+  indoorThermoHygroEnabled: boolean;
+}
 
 function parseNum(input: number | string, int?: boolean) {
   if (typeof input === 'number') {
@@ -13,13 +20,16 @@ function parseNum(input: number | string, int?: boolean) {
 }
 
 export default function convertLaCrosseObservation(
+  options: Options,
   laCrosseObservation: LaCrosseObservation
 ): Observation {
-  const thermoHygroEnabled = process.env.THERMO_HYGRO_ENABLED === '1';
-  const pressureEnabled = process.env.PRESSURE_ENABLED === '1';
-  const rainEnabled = process.env.RAIN_ENABLED === '1';
-  const windEnabled = process.env.WIND_ENABLED === '1';
-  const indoorThermoHygroEnabled = process.env.INDOOR_THERMO_HYGRO_ENABLED === '1';
+  const {
+    thermoHygroEnabled,
+    pressureEnabled,
+    rainEnabled,
+    windEnabled,
+    indoorThermoHygroEnabled,
+  } = options;
 
   return {
     timestamp: new Date(

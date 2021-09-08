@@ -1,12 +1,13 @@
-import { S3Event, SQSEvent } from 'aws-lambda';
+import { S3Event, SQSHandler } from 'aws-lambda';
 
 import convertToWundergroundObservations from './lib/convertToWundergroundObservation';
-import submitToWunderground from './lib/submitToWunderground';
 import { readFromS3 } from './lib/s3';
+import submitToWunderground from './lib/submitToWunderground';
 
-const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = process.env;
+const vars = JSON.parse(process.env.JSON_VARS!);
+const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = vars;
 
-export async function handler(event: SQSEvent) {
+export const handler: SQSHandler = async event => {
   if (!WUNDERGROUND_ID) {
     throw new Error('No WUNDERGROUND_ID defined');
   }
@@ -44,4 +45,4 @@ export async function handler(event: SQSEvent) {
       );
     }
   }
-}
+};
