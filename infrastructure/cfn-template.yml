@@ -18,10 +18,13 @@ Resources:
   Reader:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/schedule.yml
+      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/scheduled-function.yml
       Parameters:
+        ServiceName: !Ref AWS::StackName
+        ComponentName: reader
         # Description: Fetches weather observations from La Crosse Alerts Mobile and writes them to S3
-        EnvironmentVariablesJson: !Sub |
+        FunctionCodeSha: !Ref FunctionCodeSha
+        FunctionEnvironmentVariablesJson: !Sub |
           {
             "LA_CROSSE_DEVICE_ID": "${LaCrosseDeviceId}",
             "S3_BUCKET_NAME": "${ObservationsBucket}",
@@ -31,30 +34,30 @@ Resources:
             "WIND_ENABLED": true,
             "INDOOR_THERMO_HYGRO_ENABLED": true
           }
-        FunctionCodeSha: !Ref FunctionCodeSha
         FunctionHandler: reader.handler
         FunctionMemorySize: 1024
         FunctionTimeoutSecs: 20
         FunctionPayload: '{"count": 3}'
-        Name: !Sub ${AWS::StackName}-reader
         ScheduleExpression: rate(15 minutes) # La Crosse usually publishes a new observation every 7-17 mins
 
   Writer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/queue.yml
+      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/queue-function.yml
       Parameters:
+        ServiceName: !Ref AWS::StackName
+        ComponentName: writer
+
         # Description: Subscribes to queue of S3 writes, fetches observation from S3, and submits it Weather Underground PWS
-        EnvironmentVariablesJson: !Sub |
+        FunctionCodeSha: !Ref FunctionCodeSha
+        FunctionEnvironmentVariablesJson: !Sub |
           {
             "WUNDERGROUND_ID": "${WundergroundId}",
             "WUNDERGROUND_PWD": "${WundergroundPassword}"
           }
-        FunctionCodeSha: !Ref FunctionCodeSha
         FunctionHandler: writer.handler
         FunctionMemorySize: 1024
         FunctionTimeoutSecs: 20
-        Name: !Sub ${AWS::StackName}-writer
         MessageSourceArn: !Sub arn:aws:s3:*:*:${AWS::StackName}-observations
 
   ObservationsBucket:

@@ -1,18 +1,21 @@
 $imports:
-  AlarmEmail: env:ALARM_EMAIL
-  FunctionCodeSha: env:FUNCTION_CODE_SHA
-  LaCrosseDeviceId: env:LA_CROSSE_DEVICE_ID
-  WundergroundId: env:WUNDERGROUND_ID
-  WundergroundPassword: env:WUNDERGROUND_PWD
+  package: '../package.json'
+  alarmEmail: env:ALARM_EMAIL
+  functionCodeSha: env:FUNCTION_CODE_SHA
+  laCrosseDeviceId: env:LA_CROSSE_DEVICE_ID
+  wundergroundId: env:WUNDERGROUND_ID
+  wundergroundPassword: env:WUNDERGROUND_PWD
 
+StackName: !$ package.name
 Template: ./cfn-template.yml
+
 OnFailure: DELETE
 Capabilities:
   - CAPABILITY_NAMED_IAM
 
 Parameters:
-  AlarmEmail: '{{ AlarmEmail }}'
-  FunctionCodeSha: '{{ FunctionCodeSha }}'
-  LaCrosseDeviceId: '{{ LaCrosseDeviceId }}'
-  WundergroundId: '{{ WundergroundId }}'
-  WundergroundPassword: '{{ WundergroundPassword }}'
+  AlarmEmail: !$ alarmEmail
+  FunctionCodeSha: !$ functionCodeSha
+  LaCrosseDeviceId: !$ laCrosseDeviceId
+  WundergroundId: !$ wundergroundId
+  WundergroundPassword: !$ wundergroundPassword
