@@ -1,1 +1,1 @@
-../lambda-starter/shell/lambda/build.sh
+../serverless-starter/shell/lambda/build.sh
