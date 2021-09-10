@@ -22,7 +22,7 @@ Resources:
       Parameters:
         ServiceName: !Ref AWS::StackName
         ComponentName: reader
-        # Description: Fetches weather observations from La Crosse Alerts Mobile and writes them to S3
+
         FunctionCodeSha: !Ref FunctionCodeSha
         FunctionEnvironmentVariablesJson: !Sub |
           {
@@ -48,7 +48,6 @@ Resources:
         ServiceName: !Ref AWS::StackName
         ComponentName: writer
 
-        # Description: Subscribes to queue of S3 writes, fetches observation from S3, and submits it Weather Underground PWS
         FunctionCodeSha: !Ref FunctionCodeSha
         FunctionEnvironmentVariablesJson: !Sub |
           {
@@ -74,13 +73,13 @@ Resources:
           - Event: s3:ObjectCreated:Put
             Queue: !GetAtt Writer.Outputs.QueueArn
 
-  S3ReadPolicy:
+  ObservationsBucketReadPolicy:
     Type: AWS::IAM::Policy
     Properties:
       Roles:
         - !GetAtt Reader.Outputs.FunctionRoleName
         - !GetAtt Writer.Outputs.FunctionRoleName
-      PolicyName: s3-read
+      PolicyName: observations-bucket-read
       PolicyDocument:
         Statement:
           - Effect: Allow
@@ -90,12 +89,12 @@ Resources:
             Action: s3:GetObject
             Resource: !Sub '${ObservationsBucket.Arn}/*'
 
-  S3WritePolicy:
+  ObservationsBucketWritePolicy:
     Type: AWS::IAM::Policy
     Properties:
       Roles:
         - !GetAtt Reader.Outputs.FunctionRoleName
-      PolicyName: s3-write
+      PolicyName: observations-bucket-write
       PolicyDocument:
         Statement:
           - Effect: Allow
