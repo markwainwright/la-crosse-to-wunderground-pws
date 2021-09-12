@@ -18,7 +18,7 @@ Resources:
   Reader:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/scheduled-function.yml
+      TemplateURL: https://mark-wainwright-shared-cfn-assets-us-east-1.s3.amazonaws.com/templates/scheduled-function.yml
       Parameters:
         ServiceName: !Ref AWS::StackName
         ComponentName: reader
@@ -38,12 +38,13 @@ Resources:
         FunctionMemorySize: 1024
         FunctionTimeoutSecs: 20
         FunctionPayload: '{"count": 3}'
+
         ScheduleExpression: rate(15 minutes) # La Crosse usually publishes a new observation every 7-17 mins
 
   Writer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://mark-wainwright-cfn-assets-us-east-1.s3.amazonaws.com/templates/queue-function.yml
+      TemplateURL: https://mark-wainwright-shared-cfn-assets-us-east-1.s3.amazonaws.com/templates/queue-function.yml
       Parameters:
         ServiceName: !Ref AWS::StackName
         ComponentName: writer
@@ -57,6 +58,7 @@ Resources:
         FunctionHandler: writer.handler
         FunctionMemorySize: 1024
         FunctionTimeoutSecs: 20
+
         MessageSourceArn: !Sub arn:aws:s3:*:*:${AWS::StackName}-observations
 
   ObservationsBucket:
