@@ -4,7 +4,7 @@
   "description": "AWS service that fetches weather observations from La Crosse Alerts Mobile and submits them to a Weather Underground PWS.",
   "main": "dist/index.js",
   "scripts": {
-    "build": "./build.sh",
+    "build": "tsc",
     "deploy": "./deploy.sh",
     "invoke": "aws lambda invoke --function-name la-crosse-to-wunderground-reader --region us-east-1 --payload '{\"count\": 3}' --cli-binary-format raw-in-base64-out $(tty)",
     "test": "jest"

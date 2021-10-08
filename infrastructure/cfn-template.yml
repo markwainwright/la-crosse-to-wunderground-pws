@@ -18,7 +18,9 @@ Resources:
   Reader:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://mark-wainwright-shared-cfn-assets-us-east-1.s3.amazonaws.com/templates/scheduled-function.yml
+      TemplateURL: !Sub
+        - https://${Domain}/scheduled-function/v1.yml
+        - Domain: !ImportValue CloudFormationTemplatesBucketDomainName
       Parameters:
         ServiceName: !Ref AWS::StackName
         ComponentName: reader
@@ -44,7 +46,9 @@ Resources:
   Writer:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://mark-wainwright-shared-cfn-assets-us-east-1.s3.amazonaws.com/templates/queue-function.yml
+      TemplateURL: !Sub
+        - https://${Domain}/queue-function/v1.yml
+        - Domain: !ImportValue CloudFormationTemplatesBucketDomainName
       Parameters:
         ServiceName: !Ref AWS::StackName
         ComponentName: writer

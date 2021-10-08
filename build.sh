@@ -1,1 +1,1 @@
-../serverless-starter/shell/lambda/build.sh
+../cloudformation-templates/tooling/build.sh
