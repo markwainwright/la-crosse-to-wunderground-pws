@@ -63,12 +63,16 @@ Resources:
         FunctionMemorySize: 1024
         FunctionTimeoutSecs: 20
 
-        MessageSourceArn: !Sub arn:aws:s3:*:*:${AWS::StackName}-observations
+        MessageSourceArn: !Sub
+          - arn:aws:s3:*:*:${BucketNamePrefix}-${AWS::StackName}-observations
+          - BucketNamePrefix: !ImportValue BucketNamePrefix
 
   ObservationsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${AWS::StackName}-observations
+      BucketName: !Sub
+        - ${BucketNamePrefix}-${AWS::StackName}-observations
+        - BucketNamePrefix: !ImportValue BucketNamePrefix
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
