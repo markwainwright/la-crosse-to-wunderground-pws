@@ -16,6 +16,11 @@ export const handler: SQSHandler = async event => {
     throw new Error('No WUNDERGROUND_PWD defined');
   }
 
+  if (!event.Records || event.Records.length === 0) {
+    console.log('No records in event');
+    return;
+  }
+
   for (const sqsRecord of event.Records) {
     const sqsMessageId = sqsRecord.messageId;
     const s3Message = JSON.parse(sqsRecord.body) as S3Event;
