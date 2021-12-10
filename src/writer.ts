@@ -7,6 +7,10 @@ import submitToWunderground from './lib/submitToWunderground';
 const vars = JSON.parse(process.env.JSON_VARS!);
 const { WUNDERGROUND_ID, WUNDERGROUND_PWD } = vars;
 
+interface S3TestEvent {
+  Event: 's3:TestEvent';
+}
+
 export const handler: SQSHandler = async event => {
   if (!WUNDERGROUND_ID) {
     throw new Error('No WUNDERGROUND_ID defined');
@@ -17,15 +21,20 @@ export const handler: SQSHandler = async event => {
   }
 
   if (!event.Records || event.Records.length === 0) {
-    console.log('No records in event');
+    console.log('Ignoring SQS event with no records');
     return;
   }
 
   for (const sqsRecord of event.Records) {
     const sqsMessageId = sqsRecord.messageId;
-    const s3Message = JSON.parse(sqsRecord.body) as S3Event;
+    const s3Event = JSON.parse(sqsRecord.body) as S3Event | S3TestEvent;
 
-    for (const s3Record of s3Message.Records) {
+    if (!('Records' in s3Event)) {
+      console.log('Ignoring S3 event with no records');
+      continue;
+    }
+
+    for (const s3Record of s3Event.Records) {
       const { observation, correlationId } = await readFromS3(
         s3Record.s3.bucket.name,
         decodeURIComponent(s3Record.s3.object.key),
