@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "deploy": "./deploy.sh",
-    "invoke": "aws lambda invoke --function-name la-crosse-to-wunderground-reader --region us-west-2 --payload '{\"count\": 3}' --cli-binary-format raw-in-base64-out $(tty)",
+    "invoke": "aws lambda invoke --function-name la-crosse-to-wunderground-reader --region us-west-2 --payload '{\"count\": 1}' --cli-binary-format raw-in-base64-out $(tty)",
     "test": "jest"
   },
   "keywords": [],

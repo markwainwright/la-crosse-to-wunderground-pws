@@ -30,7 +30,7 @@ Resources:
           {
             "LA_CROSSE_DEVICE_ID": "${LaCrosseDeviceId}",
             "S3_BUCKET_NAME": "${ObservationsBucket}",
-            "THERMO_HYGRO_ENABLED": true,
+            "THERMO_HYGRO_ENABLED": false,
             "PRESSURE_ENABLED": true,
             "RAIN_ENABLED": false,
             "WIND_ENABLED": true,
@@ -39,7 +39,7 @@ Resources:
         FunctionHandler: reader.handler
         FunctionMemorySize: 1024
         FunctionTimeoutSecs: 20
-        FunctionPayload: '{"count": 3}'
+        FunctionPayload: '{"count": 1}'
 
         ScheduleExpression: rate(15 minutes) # La Crosse usually publishes a new observation every 7-17 mins
 
