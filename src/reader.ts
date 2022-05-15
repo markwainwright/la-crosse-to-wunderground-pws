@@ -3,11 +3,12 @@ import { Handler } from 'aws-lambda';
 import convertLaCrosseObservation from './lib/convertLaCrosseObservation';
 import getLaCrosseObservations from './lib/getLaCrosseObservations';
 import { writeToS3 } from './lib/s3';
+import { Observation } from './lib/types';
 
 interface FunctionPayload {
   count: number;
 }
-type FunctionHandler = Handler<FunctionPayload, void>;
+type FunctionHandler = Handler<FunctionPayload, Observation[]>;
 
 const vars = JSON.parse(process.env.JSON_VARS!);
 const { LA_CROSSE_DEVICE_ID, S3_BUCKET_NAME } = vars;
@@ -51,4 +52,6 @@ export const handler: FunctionHandler = async (event, context) => {
       })
     );
   }
+
+  return observations;
 };
