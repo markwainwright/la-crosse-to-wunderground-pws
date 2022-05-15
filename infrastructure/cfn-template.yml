@@ -30,7 +30,7 @@ Resources:
           {
             "LA_CROSSE_DEVICE_ID": "${LaCrosseDeviceId}",
             "S3_BUCKET_NAME": "${ObservationsBucket}",
-            "THERMO_HYGRO_ENABLED": false,
+            "THERMO_HYGRO_ENABLED": true,
             "PRESSURE_ENABLED": true,
             "RAIN_ENABLED": false,
             "WIND_ENABLED": true,
