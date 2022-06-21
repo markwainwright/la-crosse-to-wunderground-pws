@@ -1,8 +1,13 @@
-import { S3 } from 'aws-sdk';
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 
 import { Observation } from './types';
 
-const s3 = new S3();
+const s3 = new S3Client({});
 
 enum Status {
   Uploaded = 'Uploaded',
@@ -19,18 +24,18 @@ export async function writeToS3(
   const key = `v2/${observation.timestamp}.json`;
 
   try {
-    await s3
-      .headObject({
+    await s3.send(
+      new HeadObjectCommand({
         Bucket: bucketName,
         Key: key,
       })
-      .promise();
+    );
 
     return Status.AlreadyUploaded;
   } catch (error) {
     if ((error as any).code === 'NotFound') {
-      await s3
-        .putObject({
+      await s3.send(
+        new PutObjectCommand({
           Bucket: bucketName,
           Key: key,
           Body: JSON.stringify(observation),
@@ -39,7 +44,7 @@ export async function writeToS3(
             [CORRELATION_ID_METADATA_KEY]: correlationId,
           },
         })
-        .promise();
+      );
 
       return Status.Uploaded;
     } else {
@@ -49,7 +54,7 @@ export async function writeToS3(
 }
 
 export async function readFromS3(bucketName: string, key: string, eTag: string) {
-  const result = await s3.getObject({ Bucket: bucketName, Key: key }).promise();
+  const result = await s3.send(new GetObjectCommand({ Bucket: bucketName, Key: key }));
 
   if (!result.Body) {
     throw new Error('No body');
