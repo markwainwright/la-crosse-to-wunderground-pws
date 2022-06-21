@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node14",
+  "extends": "@tsconfig/node16",
   "files": ["src/reader.ts", "src/writer.ts"],
   "compilerOptions": {
     "outDir": "dist",

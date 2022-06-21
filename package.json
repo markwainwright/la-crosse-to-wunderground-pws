@@ -13,7 +13,7 @@
   "author": "Mark Wainwright",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@tsconfig/node14": "^1.0.1",
+    "@tsconfig/node16": "^1.0.3",
     "@types/aws-lambda": "^8.10.83",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.7.13",
